@@ -1,5 +1,3 @@
-static int newClientId = 10;
-
 #include <arpa/inet.h>
 #include <pthread.h>
 #include <signal.h>
@@ -9,6 +7,8 @@ static int newClientId = 10;
 
 #include "client.h"
 #include "utils.h"
+
+static int newClientId = 10;
 
 int main(int argc, char **argv){
     if(argc != 2){
