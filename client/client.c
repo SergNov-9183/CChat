@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 #include "client.h"
 
 #include <stdio.h>
@@ -110,4 +111,4 @@ void execute() {
     while (run == TRUE);
     printf("\nBye\n");
     close(socketFileDescriptor);
-}
+
