@@ -1,4 +1,5 @@
 #include "client.h"
+#include "commands.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -16,21 +17,18 @@ static int socketFileDescriptor = 0;
 static char name[32];
 
 void sendingThread() {
-    char message[LENGTH] = {};
-    char buffer[LENGTH + 32] = {};
+    char message[LENGTH] = {0};
+    char buffer[LENGTH + 32] = {0};
+    char command[COMMAND_LEN] = {0};
 
     while(TRUE) {
         str_overwrite_stdout();
-        fgets(message, LENGTH, stdin);
-        removeNewLineSymbol(message, LENGTH);
+        fgets(message, MES_LENGTH, stdin);
+        removeNewLineSymbol(message, MES_LENGTH);
+        if(CommandAnalyzer(name, message, socketFileDescriptor))
 
-        if (strcmp(message, "exit") == 0) {
-            break;
-        } else {
-            sprintf(buffer, "%s: %s\n", name, message);
-            send(socketFileDescriptor, buffer, strlen(buffer), 0);
-        }
 
+        memset(command, 0, sizeof(message));
         bzero(message, LENGTH);
         bzero(buffer, LENGTH + 32);
     }
@@ -38,17 +36,54 @@ void sendingThread() {
 }
 
 void receivingThread() {
-    char message[LENGTH] = {};
+    char message[LENGTH] = {0};
+    char command[COMMAND_LEN] = {0};
+
     while (TRUE) {
         int receive = recv(socketFileDescriptor, message, LENGTH, 0);
-        if (receive > 0) {
+        if (receive > 0)
+          {
+            if(IsCommand(message))
+              {
+                CommandDefAndRegUp(message, command);
+                if(!strcmp(command, "GET_PASSWORD"))
+                  {
+                    printf("Input password: ");
+                    break;
+                  }
+                else
+                  if(!strcmp(command, "WELCOME"))
+                    {
+                      printf("Successfully connected!\n");
+                      printf("Now you can send message in common chat or use #HELP# to get more useful information.\n");
+                    }
+                else
+                    if(!strcmp(command, "WRONG_PASSWORD"))
+                      {
+                        if(message[strlen(message)-2] == '0')
+                          printf("Access denied. Try again.\n");
+                        else
+                          printf("Wrong password. %c attempts left.\n", message[strlen(message)-2]);
+                      }
+                else
+                      {
+                        if(!strcmp(command, "NOT_REGISTERED"))
+                          {
+                            printf("New user? Create an account? (y/n)");
+                          }
+                      }
+              }
             printf("%s", message);
             str_overwrite_stdout();
-        } else if (receive == 0) {
+          }
+        else if (receive == 0)
+          {
             break;
-        } else {
+          }
+        else
+          {
             // -1
-        }
+          }
         memset(message, 0, sizeof(message));
     }
 }
