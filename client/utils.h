@@ -1,13 +1,16 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-#include <netinet/in.h>
+#include <signal.h>
 
 typedef char Bool;
 #define TRUE 1
 #define FALSE 0
 
+extern volatile sig_atomic_t run;
+
+void catch_ctrl_c_and_exit(int signal);
+void str_overwrite_stdout();
 void removeNewLineSymbol (char* string, int length);
-void printClientAddress(struct sockaddr_in address);
 
 #endif // UTILS_H
