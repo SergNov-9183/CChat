@@ -7,6 +7,7 @@
 #define LENGTH 2048
 #define COMMAND_LEN 32
 #define MAX_CLIENTS 50
+
 int IsCommand(char* str)
 {
   //printf("%s", "Command?\n");
@@ -141,6 +142,7 @@ char** SplitInit(char* message)
     }
   splitted = SplitString(message, '#');
   return splitted;
+
 }
 
 int CommandAnalyzer(char* name, char* message, int socketFileDescriptor)
@@ -165,6 +167,7 @@ int CommandAnalyzer(char* name, char* message, int socketFileDescriptor)
                if(IsCommandCorrect(message, 3))
                  {
                    SendRequest(socketFileDescriptor, message, "Request sent (for Private Messaging)");
+
                  }
                else
                  {
@@ -179,6 +182,7 @@ int CommandAnalyzer(char* name, char* message, int socketFileDescriptor)
                     if(IsCommandCorrect(message, 3))
                       {
                         SendRequest(socketFileDescriptor, message, "Request sent (Adding friend)");
+
                       }
                     else
                       {
@@ -193,6 +197,7 @@ int CommandAnalyzer(char* name, char* message, int socketFileDescriptor)
                         if(IsCommandCorrect(message, 3))
                           {
                             SendRequest(socketFileDescriptor, message, "Request sent (Removing Friend)");
+
                           }
                         else
                           {
@@ -207,6 +212,7 @@ int CommandAnalyzer(char* name, char* message, int socketFileDescriptor)
                             if(IsCommandCorrect(message, 2))
                               {
                                 SendRequest(socketFileDescriptor, message,  "Request sent (Creating Local Chat)");
+
                               }
                             else
                               {
@@ -225,11 +231,13 @@ int CommandAnalyzer(char* name, char* message, int socketFileDescriptor)
                                         printf("Input your data according to pattern:\n");
                                         printf("\t#NEW_CLIENT#fullname#password#\n");
                                         send(socketFileDescriptor, message, strlen(message), 0);
+
                                       }
                                     if(!strcmp(command, "N"))
                                       {
                                         printf("Your session will be closed.\n");
                                         return -1;
+
                                       }
                                   }
                               }
@@ -353,6 +361,7 @@ int CommandAnalyzer(char* name, char* message, int socketFileDescriptor)
                                                   }
                                               }
                                           }
+
                                       }
                                   }
                               }
