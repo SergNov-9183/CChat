@@ -3,6 +3,7 @@
 
 #include <netinet/in.h>
 
+typedef char Bool;
 #define TRUE 1
 #define FALSE 0
 
