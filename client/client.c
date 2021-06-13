@@ -27,7 +27,8 @@ void sendingThread() {
         if (strcmp(message, "exit") == 0) {
             break;
         } else {
-            sprintf(buffer, "%s: %s\n", name, message);
+            //sprintf(buffer, "%s: %s\n", name, message);
+            sprintf(buffer, "%s\n", message);
             send(socketFileDescriptor, buffer, strlen(buffer), 0);
         }
 
