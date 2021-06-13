@@ -8,13 +8,8 @@
 
 #include "client.h"
 
-static int newClientId = 10;
-static int listenFileDescriptor = 0;
-static int socketFileDescriptor = 0;
-static pthread_t threadId = 0;
-
-Bool init(char *strPort) {
-    char *ip = "127.0.0.1";
+Bool init(char* strPort) {
+    char* ip = "127.0.0.1";
     int port = atoi(strPort);
     int option = 1;
     struct sockaddr_in serverAddress;
@@ -27,7 +22,7 @@ Bool init(char *strPort) {
 
     if(setsockopt(listenFileDescriptor, SOL_SOCKET,(SO_REUSEPORT | SO_REUSEADDR),(char*)&option,sizeof(option)) < 0){
         perror("Listening socket configuration error");
-    return FALSE;
+        return FALSE;
     }
 
     // Bind
@@ -45,10 +40,14 @@ Bool init(char *strPort) {
 }
 
 void execute() {
-    while(TRUE){
+    while(run == TRUE){
         struct sockaddr_in clientAddress;
-        socklen_t clilen = sizeof(clientAddress);
-        socketFileDescriptor = accept(listenFileDescriptor, (struct sockaddr*)&clientAddress, &clilen);
+        socklen_t clientAddressLength = sizeof(clientAddress);
+        int socketFileDescriptor = accept(listenFileDescriptor, (struct sockaddr*)&clientAddress, &clientAddressLength);
+
+        if (socketFileDescriptor < 0) {
+            break;
+        }
 
         // Check if max clients is reached
         if((clientCount + 1) == MAX_CLIENT_COUNT){
@@ -59,18 +58,12 @@ void execute() {
             continue;
         }
 
-        // Client settings
-        Client *cli = (Client *)malloc(sizeof(Client));
-        cli->address = clientAddress;
-        cli->socketFileDescriptor = socketFileDescriptor;
-        cli->clientId = newClientId++;
-
-        // Add client
-        addClient(cli);
-        pthread_create(&threadId, NULL, &clientThread, (void*)cli);
+        pthread_t threadId = 0;
+        pthread_create(&threadId, NULL, &clientThread, packInt(socketFileDescriptor));
 
         // Reduce CPU usage
         sleep(1);
     }
 
+    printf("\nMain thread is terminated\n");
 }
