@@ -6,4 +6,11 @@ CONFIG -= qt
 LIBS += -lpthread
 
 SOURCES += \
-        main.c
+        main.c \
+        client.c \
+        utils.c
+    
+HEADERS += \
+        client.h \
+        utils.h
+        
