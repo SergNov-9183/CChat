@@ -10,7 +10,11 @@ void catch_ctrl_c_and_exit(int signal) {
 }
 
 void str_overwrite_stdout() {
+<<<<<<< HEAD
   printf("> ");
+=======
+  printf("%s", "> ");
+>>>>>>> f8ccade... Client fixed
   fflush(stdout);
 }
 

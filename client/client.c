@@ -8,8 +8,14 @@
 #include <arpa/inet.h>
 #include <pthread.h>
 
+
 #define LENGTH 2048
 
+static pthread_t sendMessageThread = 0;
+static pthread_t recvMessageThread = 0;
+
+static int socketFileDescriptor = 0;
+static char name[32];
 
 static pthread_t sendMessageThread = 0;
 static pthread_t recvMessageThread = 0;
@@ -52,6 +58,7 @@ void sendingThread() {
 
         memset(command, 0, sizeof(message));
         bzero(message, LENGTH);
+
     }
     catch_ctrl_c_and_exit(2);
 }
@@ -154,6 +161,7 @@ Bool init(char *strPort) {
     serverAddress.sin_port = htons(port);
 
 
+
     // Connect to Server
     int error = connect(socketFileDescriptor, (struct sockaddr *)&serverAddress, sizeof(serverAddress));
     if (error == -1) {
@@ -188,5 +196,3 @@ void execute() {
     close(socketFileDescriptor);
 
 }
-
->>>>>>> 9657ea8... Link issue
