@@ -8,8 +8,10 @@ LIBS += -lpthread
 SOURCES += \
         client.c \
         main.c \
+        server.c \
         utils.c
 
 HEADERS += \
     client.h \
+    server.h \
     utils.h
