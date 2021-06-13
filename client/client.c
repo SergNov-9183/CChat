@@ -1,4 +1,7 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> f8ccade... Client fixed
 #include "client.h"
 
 #include <stdio.h>
@@ -9,6 +12,7 @@
 #include <pthread.h>
 
 #define LENGTH 2048
+
 
 static pthread_t sendMessageThread = 0;
 static pthread_t recvMessageThread = 0;
@@ -30,7 +34,7 @@ void sendingThread() {
         } else {
 
             sprintf(buffer, "%s: %s\n", name, message);
-            
+
             send(socketFileDescriptor, buffer, strlen(buffer), 0);
         }
 
@@ -111,4 +115,8 @@ void execute() {
     while (run == TRUE);
     printf("\nBye\n");
     close(socketFileDescriptor);
+<<<<<<< HEAD
 
+=======
+}
+>>>>>>> f8ccade... Client fixed
