@@ -9,5 +9,6 @@ void* clientThread(void* value);
 void closeAllClients();
 
 void loadClients();
+void loadRooms();
 
 #endif // CLIENT_H

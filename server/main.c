@@ -19,6 +19,7 @@ int main(int argc, char** argv){
 
     printf("Chat server started\n");
 
+    loadRooms();
     loadClients();
     execute();
     closeAllClients();
