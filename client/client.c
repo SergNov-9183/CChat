@@ -49,7 +49,6 @@ void sendingThread() {
 
 
 
-
         memset(command, 0, sizeof(message));
         bzero(message, LENGTH);
     }
@@ -77,6 +76,7 @@ void receivingThread() {
                     printf("Input password: ");
                     fflush(stdout);
                     //break;
+
                   }
                 else
                   if(!strcmp(command, "WELCOME"))
@@ -107,6 +107,7 @@ void receivingThread() {
                             printf("Wrong password. %c attempts left.\n", message[strlen(message)-2]);
                             fflush(stdout);
                           }
+
                       }
                 else
                       {
@@ -116,6 +117,7 @@ void receivingThread() {
                           }
                       }}
               }
+
             str_overwrite_stdout();
           }
         else if (receive == 0)
@@ -126,7 +128,9 @@ void receivingThread() {
           {
             // -1
           }
+
         memset(command, 0, sizeof(command));
+
         memset(message, 0, sizeof(message));
     }
 }
