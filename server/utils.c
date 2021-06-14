@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 int listenFileDescriptor = 0;
@@ -42,11 +43,20 @@ int unpackInt(void* value) {
 
 int getValue(char *source, char *destination, int position) {
     int idx = 0;
-    while (source[position] != '#') {
-        destination[idx] = source[position];
-        ++idx;
+    char data[BUFFER_SIZE] = { 0 };
+    int length = strlen(source);
+    if (position >= 0 && position < length && source[position] == '#') {
         ++position;
+        while (source[position] != '#') {
+            if (position >= length || source[position] == 0 || source[position] == '\n' || source[position] == '\r') {
+                position = -1;
+                break;
+            }
+            data[idx] = source[position];
+            ++idx;
+            ++position;
+        }
     }
-    ++position;
+    strcpy(destination, data);
     return position;
 }
