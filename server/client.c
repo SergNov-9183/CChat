@@ -10,6 +10,17 @@
 
 #define BUFFER_SIZE 2048
 #define CLIENTS_FILE_NAME "clients.txt"
+#define NICKNAME_LENGTH 32
+#define FULLNAME_LENGTH 50
+#define PASSWORD_LENGTH 30
+
+// Client structure
+typedef struct{
+    int socketFileDescriptor;
+    char nickName[NICKNAME_LENGTH];
+    char fullName[FULLNAME_LENGTH];
+    char password[PASSWORD_LENGTH];
+} Client;
 
 _Atomic int clientCount = 0;
 
@@ -30,6 +41,7 @@ Bool sendMessage(int socketFileDescriptor, char* message) {
 Client* addClient(char* nickName, char* fullName, char* password, Bool writeToFile){
     Client* client = (Client*)malloc(sizeof(Client));
     if (client) {
+        client->socketFileDescriptor = 0;
         strcpy(client->nickName, nickName);
         strcpy(client->fullName, fullName);
         strcpy(client->password, password);
@@ -57,18 +69,11 @@ void sendMessageToClients(char* message, int senderClientId){
     pthread_mutex_unlock(&clients_mutex);
 }
 
-void disconnectClient(int clientId) {
-    pthread_mutex_lock(&clients_mutex);
-    clients[clientId]->socketFileDescriptor = 0;
-    pthread_mutex_unlock(&clients_mutex);
-}
-
-int findClient(int socketFileDescriptor, char* nickName) {
+int findClient(char* nickName) {
     int clientId = -1;
     pthread_mutex_lock(&clients_mutex);
     for(int i = 0; i < clientCount; ++i){
         if(strcmp(clients[i]->nickName, nickName) == 0) {
-            clients[i]->socketFileDescriptor = socketFileDescriptor;
             clientId = i;
             break;
         }
@@ -95,17 +100,30 @@ int registration(int socketFileDescriptor, char* nickName) {
         char password[PASSWORD_LENGTH] = { 0 };
         getValue(data, password, idx);
 
-        Client* client = addClient(nickName, fullName, password, TRUE);
-        if (client) {
-            client->socketFileDescriptor = socketFileDescriptor;
-            return findClient(socketFileDescriptor, nickName);
-        }
+        addClient(nickName, fullName, password, TRUE);
+        return findClient(nickName);
     }
     perror("Invalid registration answer");
     return -1;
 }
 
-Bool getPassword(int clientId) {
+void buildWelcome(char* message, int clientId) {
+    int activeClientCount = 0;
+    char activeClients[BUFFER_SIZE] = { 0 };
+    pthread_mutex_lock(&clients_mutex);
+    for(int i = 0; i < clientCount; ++i){
+        if(i != clientId && clients[i]->socketFileDescriptor > 0) {
+            ++activeClientCount;
+            char client[BUFFER_SIZE] = { 0 };
+            sprintf(client, "%s#", clients[i]->nickName);
+            strcat(activeClients, client);
+        }
+    }
+    pthread_mutex_unlock(&clients_mutex);
+    sprintf(message, "#WELCOME#%d#%s\n", activeClientCount, activeClients);
+}
+
+Bool getPassword(int socketFileDescriptor, int clientId) {
     pthread_mutex_lock(&clients_mutex);
     Client* client = clients[clientId];
     pthread_mutex_unlock(&clients_mutex);
@@ -115,73 +133,98 @@ Bool getPassword(int clientId) {
         while (attemptsLeft > 0) {
             char message[BUFFER_SIZE] = { 0 };
             sprintf(message, "#GET_PASSWORD#%d#\n", attemptsLeft);
-            if(sendMessage(client->socketFileDescriptor, message) == FALSE){
+            if(sendMessage(socketFileDescriptor, message) == FALSE){
                 return FALSE;
             }
             char data[BUFFER_SIZE] = { 0 };
-            if(recv(client->socketFileDescriptor, data, BUFFER_SIZE, 0) <= 0){
+            if(recv(socketFileDescriptor, data, BUFFER_SIZE, 0) <= 0){
                 perror("Can't get client data");
                 return FALSE;
             }
             removeNewLineSymbol(data, strlen(data));
             if(strcmp(client->password, data) == 0) {
-                sendMessage(client->socketFileDescriptor, "#WELCOME#");
+                char welcomeMessage[BUFFER_SIZE] = { 0 };
+                buildWelcome(welcomeMessage, clientId);
+                sendMessage(socketFileDescriptor, welcomeMessage);
                 return TRUE;
             }
             --attemptsLeft;
         }
-        sendMessage(client->socketFileDescriptor, "#WRONG_PASSWORD#");
+        sendMessage(socketFileDescriptor, "#WRONG_PASSWORD#");
     }
     return FALSE;
 }
 
-void* clientThread(void* value){
-    int socketFileDescriptor = unpackInt(value);
+void clienJoined(int clientId, int socketFileDescriptor) {
+    pthread_mutex_lock(&clients_mutex);
+    Client* client = clients[clientId];
+    pthread_mutex_unlock(&clients_mutex);
 
-    // Check name
-    char nickName[NICKNAME_LENGTH] = { 0 };
+    char message[BUFFER_SIZE];
+    sprintf(message, "#CLIENT_JOINED#%s#\n", client->nickName);
+    printf("%s", message);
+    client->socketFileDescriptor = socketFileDescriptor;
+    sendMessageToClients(message, clientId);
+}
+
+void clienLeft(int clientId) {
+    pthread_mutex_lock(&clients_mutex);
+    Client* client = clients[clientId];
+    pthread_mutex_unlock(&clients_mutex);
+
+    char message[BUFFER_SIZE];
+    sprintf(message, "#CLIENT_LEFT#%s#\n", client->nickName);
+    printf("%s", message);
+    client->socketFileDescriptor = 0;
+    sendMessageToClients(message, clientId);
+}
+
+int signIn(int socketFileDescriptor, char* nickName) {
+    int clientId = -1;
     if(recv(socketFileDescriptor, nickName, NICKNAME_LENGTH, 0) <= 0 || strlen(nickName) <  2 || strlen(nickName) >= NICKNAME_LENGTH-1){
         printf("Didn't enter the nickname.\n");
     }
     else {
-        int clientId = findClient(socketFileDescriptor, nickName);
+        clientId = findClient(nickName);
         if (clientId < 0) {
             clientId = registration(socketFileDescriptor, nickName);
         }
         if (clientId < 0) {
             printf("Client connection error\n");
         }
-        else if (getPassword(clientId) == TRUE){
-            char buffOut[BUFFER_SIZE];
-            sprintf(buffOut, "%s has joined\n", nickName);
-            printf("%s", buffOut);
-            sendMessageToClients(buffOut, clientId);
-
-
-            while(TRUE){
-                bzero(buffOut, BUFFER_SIZE);
-                int receive = recv(socketFileDescriptor, buffOut, BUFFER_SIZE, 0);
-                if (receive > 0){
-                    if(strlen(buffOut) > 0){
-                        sendMessageToClients(buffOut, clientId);
-
-                        removeNewLineSymbol(buffOut, strlen(buffOut));
-                        printf("%s -> %s\n", buffOut, nickName);
-                    }
-                } else if (receive == 0 || strcmp(buffOut, "exit") == 0){
-                    sprintf(buffOut, "%s has left\n", nickName);
-                    disconnectClient(clientId);
-                    printf("%s", buffOut);
-                    sendMessageToClients(buffOut, clientId);
-                    break;
-                } else {
-                    printf("ERROR: -1\n");
-                    break;
-                }
-            }
-        }
-        else {
+        else if (getPassword(socketFileDescriptor, clientId) == FALSE){
             printf("Wrong password, client %s disconnected\n", nickName);
+            clientId = -1;
+        }
+    }
+    return clientId;
+}
+
+void* clientThread(void* value){
+    int socketFileDescriptor = unpackInt(value);
+    char nickName[NICKNAME_LENGTH] = { 0 };
+    int clientId = signIn(socketFileDescriptor, nickName);
+    if (clientId >= 0) {
+        clienJoined(clientId, socketFileDescriptor);
+
+        char buffOut[BUFFER_SIZE];
+        while(TRUE){
+            bzero(buffOut, BUFFER_SIZE);
+            int receive = recv(socketFileDescriptor, buffOut, BUFFER_SIZE, 0);
+            if (receive > 0){
+                if(strlen(buffOut) > 0){
+                    sendMessageToClients(buffOut, clientId);
+
+                    removeNewLineSymbol(buffOut, strlen(buffOut));
+                    printf("%s -> %s\n", buffOut, nickName);
+                }
+            } else if (receive == 0 || strcmp(buffOut, "exit") == 0){
+                clienLeft(clientId);
+                break;
+            } else {
+                printf("ERROR: -1\n");
+                break;
+            }
         }
     }
 
