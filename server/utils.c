@@ -9,7 +9,10 @@ int listenFileDescriptor = 0;
 volatile sig_atomic_t run = TRUE;
 
 void catchCtrlC(int signal) {
-    close(listenFileDescriptor);
+    closeSocket(listenFileDescriptor);
+#ifdef _WIN32
+    WSACleanup();
+#endif
     run = FALSE;
 }
 void removeNewLineSymbol (char* string, int length) {
@@ -23,10 +26,10 @@ void removeNewLineSymbol (char* string, int length) {
 
 void printClientAddress(struct sockaddr_in address){
     printf("%d.%d.%d.%d",
-           address.sin_addr.s_addr & 0xff,
-           (address.sin_addr.s_addr & 0xff00) >> 8,
-           (address.sin_addr.s_addr & 0xff0000) >> 16,
-           (address.sin_addr.s_addr & 0xff000000) >> 24);
+           (int)(address.sin_addr.s_addr & 0xff),
+           (int)((address.sin_addr.s_addr & 0xff00) >> 8),
+           (int)((address.sin_addr.s_addr & 0xff0000) >> 16),
+           (int)((address.sin_addr.s_addr & 0xff000000) >> 24));
 }
 
 void* packInt(int value) {
@@ -59,4 +62,13 @@ int getValue(char *source, char *destination, int position) {
     }
     strcpy(destination, data);
     return position;
+}
+
+void closeSocket(int socketFileDescriptor) {
+#ifdef _WIN32
+    closesocket(socketFileDescriptor);
+#else
+    close(socketFileDescriptor);
+#endif
+
 }
