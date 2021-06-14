@@ -86,7 +86,6 @@ int registration(int socketFileDescriptor, char* nickName) {
         perror("Can't get client data");
         return -1;
     }
-
     char command[BUFFER_SIZE] = { 0 };
     int idx = getValue(data, command, 1);
     if (strcmp(command, "NEW_CLIENT") == 0) {
