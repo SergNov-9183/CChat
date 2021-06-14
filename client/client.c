@@ -1,4 +1,5 @@
 #include "client.h"
+#include "commands.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -7,7 +8,15 @@
 #include <arpa/inet.h>
 #include <pthread.h>
 
+
 #define LENGTH 2048
+
+
+static pthread_t sendMessageThread = 0;
+static pthread_t recvMessageThread = 0;
+
+static int socketFileDescriptor = 0;
+static char name[32];
 
 static pthread_t sendMessageThread = 0;
 static pthread_t recvMessageThread = 0;
@@ -16,39 +25,118 @@ static int socketFileDescriptor = 0;
 static char name[32];
 
 void sendingThread() {
-    char message[LENGTH] = {};
-    char buffer[LENGTH + 32] = {};
+    char message[LENGTH] = {0};
+    char buffer[LENGTH + 32] = {0};
+    char command[COMMAND_LEN] = {0};
 
     while(TRUE) {
         str_overwrite_stdout();
-        fgets(message, LENGTH, stdin);
-        removeNewLineSymbol(message, LENGTH);
+        fgets(message, MES_LENGTH, stdin);
+        removeNewLineSymbol(message, MES_LENGTH);
+        if(IsCommand(message))
+          {
+            int res = CommandAnalyzer(name, message, socketFileDescriptor);
+            if(res == -1)
+              {
+                printf("CommandAnalyzer returned %d\n", res);
+                break;
+              }
+          }
+        else
+          {
+            if (strcmp(message, "exit") == 0)
+              {
+                break;
+            } else
+              {
 
-        if (strcmp(message, "exit") == 0) {
-            break;
-        } else {
-            sprintf(buffer, "%s: %s\n", name, message);
-            send(socketFileDescriptor, buffer, strlen(buffer), 0);
-        }
+                send(socketFileDescriptor, message, strlen(message), 0);
+            }
+          }
 
+        memset(command, 0, sizeof(message));
         bzero(message, LENGTH);
-        bzero(buffer, LENGTH + 32);
+
+
     }
     catch_ctrl_c_and_exit(2);
 }
 
 void receivingThread() {
-    char message[LENGTH] = {};
+    char message[LENGTH] = {0};
+    char command[COMMAND_LEN] = {0};
+
     while (TRUE) {
         int receive = recv(socketFileDescriptor, message, LENGTH, 0);
-        if (receive > 0) {
-            printf("%s", message);
+        str_overwrite_stdout();
+        printf("received: %s;\n", message);
+         str_overwrite_stdout();
+        if (receive > 0)
+          {
+            if(IsCommand(message))
+              {
+                CommandDefAndRegUp(message, command);
+
+                printf("command: %s;\n", command);
+                if(!strcmp(command, "GET_PASSWORD"))
+                  {
+                    printf("Input password: ");
+                    fflush(stdout);
+                    //break;
+
+                  }
+                else
+                  if(!strcmp(command, "WELCOME"))
+                    {
+                      str_overwrite_stdout();
+                      char ** splMes = SplitInit(message + sizeof(char));
+                      printf("Successfully connected!\n");
+//                      printf("Now:\t%s participants:\n", splMes[1]);
+//                      for(int i = 2; i < 2 + atoi(splMes[1]); ++i)
+//                        {
+//                          printf("\t\t%s", splMes[i]);
+//                        }
+                      printf("Now you can send message in common chat or use #HELP# to get more detailed information.\n");
+                      free(splMes);
+                    }
+                else{
+                    printf("Not welcome!");
+                    if(!strcmp(command, "WRONG_PASSWORD"))
+                      {
+                        printf("in WRONG_PASSWORD\n");
+                        if(message[strlen(message)-2] == 'D')
+                          {
+                            printf("Access denied. Try again.\n");
+                            catch_ctrl_c_and_exit(2);
+                          }
+                        else
+                          {
+                            printf("Wrong password. %c attempts left.\n", message[strlen(message)-2]);
+                            fflush(stdout);
+                          }
+
+                      }
+                else
+                      {
+                        if(!strcmp(command, "NOT_REGISTERED"))
+                          {
+                            printf("New user? Create an account? (y/n)");
+                          }
+                      }}
+              }
+
             str_overwrite_stdout();
-        } else if (receive == 0) {
+          }
+        else if (receive == 0)
+          {
             break;
-        } else {
+          }
+        else
+          {
             // -1
-        }
+          }
+        memset(command, 0, sizeof(command));
+
         memset(message, 0, sizeof(message));
     }
 }
@@ -74,6 +162,7 @@ Bool init(char *strPort) {
     serverAddress.sin_family = AF_INET;
     serverAddress.sin_addr.s_addr = inet_addr(ip);
     serverAddress.sin_port = htons(port);
+
 
 
     // Connect to Server
@@ -108,4 +197,6 @@ void execute() {
     while (run == TRUE);
     printf("\nBye\n");
     close(socketFileDescriptor);
+
 }
+

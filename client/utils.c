@@ -10,7 +10,7 @@ void catch_ctrl_c_and_exit(int signal) {
 }
 
 void str_overwrite_stdout() {
-  printf("%s", "> ");
+  printf("> ");
   fflush(stdout);
 }
 

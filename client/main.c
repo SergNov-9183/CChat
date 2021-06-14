@@ -18,8 +18,6 @@ int main(int argc, char **argv){
         return EXIT_FAILURE;
     }
 
-    printf("=== WELCOME TO THE CHATROOM ===\n");
-
     execute();
 
     return EXIT_SUCCESS;
