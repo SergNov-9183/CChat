@@ -191,9 +191,9 @@ Client* registration(int socketFileDescriptor, char* nickName) {
         perror("Can't get client data");
         return NULL;
     }
-
     char command[COMMAND_LENGTH] = { 0 };
     int idx = getValue(data, command, 0);
+
     if (strcmp(command, "NEW_CLIENT") == 0) {
         char fullName[FULLNAME_LENGTH] = { 0 };
         idx = getValue(data, fullName, idx);

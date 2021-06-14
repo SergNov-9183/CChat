@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> f8ccade... Client fixed
 #include "client.h"
 #include "commands.h"
 
@@ -30,21 +26,32 @@ void sendingThread() {
         str_overwrite_stdout();
         fgets(message, MES_LENGTH, stdin);
         removeNewLineSymbol(message, MES_LENGTH);
-        if(CommandAnalyzer(name, message, socketFileDescriptor))
+        if(IsCommand(message))
+          {
+            int res = CommandAnalyzer(name, message, socketFileDescriptor);
+            if(res == -1)
+              {
+                printf("CommandAnalyzer returned %d\n", res);
+                break;
+              }
+          }
+        else
+          {
+            if (strcmp(message, "exit") == 0)
+              {
+                break;
+            } else
+              {
+
+                send(socketFileDescriptor, message, strlen(message), 0);
+            }
+          }
 
 
-        if (strcmp(message, "exit") == 0) {
-            break;
-        } else {
 
-            sprintf(buffer, "%s: %s\n", name, message);
-
-            send(socketFileDescriptor, buffer, strlen(buffer), 0);
-        }
 
         memset(command, 0, sizeof(message));
         bzero(message, LENGTH);
-        bzero(buffer, LENGTH + 32);
     }
     catch_ctrl_c_and_exit(2);
 }
@@ -55,29 +62,51 @@ void receivingThread() {
 
     while (TRUE) {
         int receive = recv(socketFileDescriptor, message, LENGTH, 0);
+        str_overwrite_stdout();
+        printf("received: %s;\n", message);
+         str_overwrite_stdout();
         if (receive > 0)
           {
             if(IsCommand(message))
               {
                 CommandDefAndRegUp(message, command);
+
+                printf("command: %s;\n", command);
                 if(!strcmp(command, "GET_PASSWORD"))
                   {
                     printf("Input password: ");
-                    break;
+                    fflush(stdout);
+                    //break;
                   }
                 else
                   if(!strcmp(command, "WELCOME"))
                     {
+                      str_overwrite_stdout();
+                      char ** splMes = SplitInit(message + sizeof(char));
                       printf("Successfully connected!\n");
-                      printf("Now you can send message in common chat or use #HELP# to get more useful information.\n");
+//                      printf("Now:\t%s participants:\n", splMes[1]);
+//                      for(int i = 2; i < 2 + atoi(splMes[1]); ++i)
+//                        {
+//                          printf("\t\t%s", splMes[i]);
+//                        }
+                      printf("Now you can send message in common chat or use #HELP# to get more detailed information.\n");
+                      free(splMes);
                     }
-                else
+                else{
+                    printf("Not welcome!");
                     if(!strcmp(command, "WRONG_PASSWORD"))
                       {
-                        if(message[strlen(message)-2] == '0')
-                          printf("Access denied. Try again.\n");
+                        printf("in WRONG_PASSWORD\n");
+                        if(message[strlen(message)-2] == 'D')
+                          {
+                            printf("Access denied. Try again.\n");
+                            catch_ctrl_c_and_exit(2);
+                          }
                         else
-                          printf("Wrong password. %c attempts left.\n", message[strlen(message)-2]);
+                          {
+                            printf("Wrong password. %c attempts left.\n", message[strlen(message)-2]);
+                            fflush(stdout);
+                          }
                       }
                 else
                       {
@@ -85,9 +114,8 @@ void receivingThread() {
                           {
                             printf("New user? Create an account? (y/n)");
                           }
-                      }
+                      }}
               }
-            printf("%s", message);
             str_overwrite_stdout();
           }
         else if (receive == 0)
@@ -98,6 +126,7 @@ void receivingThread() {
           {
             // -1
           }
+        memset(command, 0, sizeof(command));
         memset(message, 0, sizeof(message));
     }
 }
