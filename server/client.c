@@ -9,7 +9,9 @@
 #include "utils.h"
 
 #define CLIENTS_FILE_NAME "clients.txt"
-#define MAINROOM_FILE_NAME "mainRoom.txt"
+#define ROOMS_FILE_NAME "rooms.txt"
+#define MAINROOM_NAME "mainRoom"
+#define MAX_ROOM_COUNT 10
 #define FILENAME_LENGTH 255
 #define COMMAND_LENGTH 32
 #define NICKNAME_LENGTH 32
@@ -17,7 +19,9 @@
 #define PASSWORD_LENGTH 30
 #define ROOMNAME_LENGTH 32
 
-typedef enum { Message, Private, Exit } ClientCommands;
+typedef enum { Message, Private, Exit, GotoRoom, AddRoom, InviteClient } ClientCommands;
+
+typedef char Room[ROOMNAME_LENGTH];
 
 // Client structure
 typedef struct{
@@ -30,13 +34,16 @@ typedef struct{
 } Client;
 
 _Atomic int clientCount = 0;
+_Atomic int roomCount = 0;
 
 FILE* clientsFile = NULL;
 
+Room rooms[MAX_ROOM_COUNT];
 Client* clients[MAX_CLIENT_COUNT];
 
 pthread_mutex_t clients_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t file_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t room_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 void buildPrivateFileName(char* fileName, int id1, int id2) {
     if (id1 < id2) {
@@ -114,6 +121,18 @@ Client* findClientById(int id) {
     return result;
 }
 
+int findRoom(char* roomName) {
+    int result = 0;
+    pthread_mutex_lock(&room_mutex);
+    for(int i = 0; i < roomCount; ++i){
+        if(strcmp(rooms[i], roomName) == 0) {
+            result = i;
+        }
+    }
+    pthread_mutex_unlock(&room_mutex);
+    return result;
+}
+
 void saveMessageFromClient(char* message, char* fileName) {
     pthread_mutex_lock(&file_mutex);
     FILE* file = fopen(fileName, "at");
@@ -125,6 +144,7 @@ void saveMessageFromClient(char* message, char* fileName) {
 }
 
 void loadMessagesForClient(Client* client, char* fileName) {
+    //printf("__________00: =%s=%d=%d=%s=\n", client->nickName, client->id, client->socketFileDescriptor, fileName);
     pthread_mutex_lock(&file_mutex);
     FILE* file = fopen(fileName, "rt");
     if (file) {
@@ -142,24 +162,7 @@ void loadMessagesForClient(Client* client, char* fileName) {
 void sendMessageToClients(char* message, Client* client){
     char msg[BUFFER_SIZE] = { 0 };
     sprintf(msg, "%s->%s", client->nickName, message);
-    if (client->room == 0) {
-        saveMessageFromClient(msg, MAINROOM_FILE_NAME);
-        pthread_mutex_lock(&clients_mutex);
-        for(int i = 0; i < clientCount; ++i){
-            if(clients[i]->id != client->id && clients[i]->socketFileDescriptor > 0){
-                if (clients[i]->room == 0) {
-                    sendMessage(clients[i]->socketFileDescriptor, msg);
-                }
-                else {
-                    char infoMessage[BUFFER_SIZE] = { 0 };
-                    sprintf(infoMessage, "%s sent message in main room\n", client->nickName);
-                    sendMessage(clients[i]->socketFileDescriptor, infoMessage);
-                }
-            }
-        }
-        pthread_mutex_unlock(&clients_mutex);
-    }
-    else if (client->room < 0) {
+    if (client->room < 0) {
         Client* partner = findClientById(-client->room);
         if (partner) {
             char fileName[FILENAME_LENGTH] = { 0 };
@@ -176,6 +179,27 @@ void sendMessageToClients(char* message, Client* client){
                 }
             }
         }
+    }
+    else {
+        char fileName[FILENAME_LENGTH] = { 0 };
+        pthread_mutex_lock(&room_mutex);
+        sprintf(fileName, "%s.txt", rooms[client->room]);
+        pthread_mutex_unlock(&room_mutex);
+        saveMessageFromClient(msg, fileName);
+        pthread_mutex_lock(&clients_mutex);
+        for(int i = 0; i < clientCount; ++i){
+            if(clients[i]->id != client->id && clients[i]->socketFileDescriptor > 0){
+                if (clients[i]->room == client->room) {
+                    sendMessage(clients[i]->socketFileDescriptor, msg);
+                }
+                else if (client->room == 0) {
+                    char infoMessage[BUFFER_SIZE] = { 0 };
+                    sprintf(infoMessage, "%s sent message in main room\n", client->nickName);
+                    sendMessage(clients[i]->socketFileDescriptor, infoMessage);
+                }
+            }
+        }
+        pthread_mutex_unlock(&clients_mutex);
     }
 
     removeNewLineSymbol(message, strlen(message));
@@ -255,7 +279,9 @@ void clienJoined(Client* client, int socketFileDescriptor) {
         char message[BUFFER_SIZE];
         sprintf(message, "#CLIENT_JOINED#%s#\n", client->nickName);
         client->socketFileDescriptor = socketFileDescriptor;
-        loadMessagesForClient(client, MAINROOM_FILE_NAME);
+        char fileName[FILENAME_LENGTH] = { 0 };
+        sprintf(fileName, "%s.txt", MAINROOM_NAME);
+        loadMessagesForClient(client, fileName);
         sendServiceMessageToClients(message, client);
     }
 }
@@ -299,17 +325,44 @@ void executePrivate(Client* client, char* nickName) {
         loadMessagesForClient(client, fileName);
         client->room = -partner->id;
     }
-
 }
 
-void executeExit(Client* client) {
+void addRoom(char* roomName) {
+    pthread_mutex_lock(&room_mutex);
+    strcpy(rooms[roomCount], roomName);
+    ++roomCount;
+
+    FILE* file = fopen(ROOMS_FILE_NAME, "at");
+    if (file) {
+        fputs(roomName, file);
+        fclose(file);
+    }
+
+    pthread_mutex_unlock(&room_mutex);
+}
+
+void gotoRoom(Client* client, char* roomName) {
+    int roomId = findRoom(roomName);
     if (client) {
-        client->room = 0;
-        loadMessagesForClient(client, MAINROOM_FILE_NAME);
+        client->room = roomId;
+        char fileName[FILENAME_LENGTH] = { 0 };
+        sprintf(fileName, "%s.txt", roomName);
+        loadMessagesForClient(client, fileName);
     }
 }
 
-ClientCommands getCommand(char* message, char* nickName, char* chatName) {
+void executeInviteClient(Client* client, char* nickName) {
+    Client* partner = findClient(nickName);
+    if (client && partner) {
+        char message[BUFFER_SIZE];
+        pthread_mutex_lock(&room_mutex);
+        sprintf(message, "#INVITATION_TO_CLIENT#%s#%s#", client->nickName, rooms[client->room]);
+        pthread_mutex_unlock(&room_mutex);
+        sendMessage(partner->socketFileDescriptor, message);
+    }
+}
+
+ClientCommands getCommand(char* message, char* nickName, char* roomName) {
     ClientCommands result = Message;
     char command[COMMAND_LENGTH] = { 0 };
     int idx = getValue(message, command, 0);
@@ -320,19 +373,40 @@ ClientCommands getCommand(char* message, char* nickName, char* chatName) {
     else if (strcmp(command, "EXIT") == 0) {
         result = Exit;
     }
+    else if (strcmp(command, "ADD_ROOM") == 0) {
+        getValue(message, roomName, idx);
+        result = AddRoom;
+    }
+    else if (strcmp(command, "GO_TO_ROOM") == 0) {
+        getValue(message, roomName, idx);
+        result = GotoRoom;
+    }
+    else if (strcmp(command, "INVITE_CLIENT") == 0) {
+        getValue(message, nickName, idx);
+        result = InviteClient;
+    }
     return result;
 }
 
 void messageHandler(char* message, Client* client) {
     char nickName[NICKNAME_LENGTH] = { 0 };
-    char chatName[ROOMNAME_LENGTH] = { 0 };
-    ClientCommands command = getCommand(message, nickName, chatName);
+    char roomName[ROOMNAME_LENGTH] = { 0 };
+    ClientCommands command = getCommand(message, nickName, roomName);
     switch (command) {
     case Private:
         executePrivate(client, nickName);
         break;
     case Exit:
-        executeExit(client);
+        gotoRoom(client, MAINROOM_NAME);
+        break;
+    case AddRoom:
+        addRoom(roomName);
+        break;
+    case GotoRoom:
+        gotoRoom(client, roomName);
+        break;
+    case InviteClient:
+        executeInviteClient(client, nickName);
         break;
     default:
         sendMessageToClients(message, client);
@@ -409,4 +483,22 @@ void loadClients() {
         return;
     }
     printf("Error opening clients file");
+}
+
+void loadRooms() {
+    pthread_mutex_lock(&room_mutex);
+    strcpy(rooms[roomCount], MAINROOM_NAME);
+    ++roomCount;
+    FILE* file = fopen(ROOMS_FILE_NAME, "rt");
+    if (file) {
+        while (!feof(file)) {
+            char roomName[ROOMNAME_LENGTH] = { 0 };
+            if (fgets(roomName, ROOMNAME_LENGTH, file)) {
+                strcpy(rooms[roomCount], roomName);
+                ++roomCount;
+            }
+        }
+        fclose(file);
+    }
+    pthread_mutex_unlock(&room_mutex);
 }
