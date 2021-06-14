@@ -11,6 +11,7 @@
 
 #define LENGTH 2048
 
+
 static pthread_t sendMessageThread = 0;
 static pthread_t recvMessageThread = 0;
 
@@ -53,12 +54,9 @@ void sendingThread() {
             }
           }
 
-
-
-
-
         memset(command, 0, sizeof(message));
         bzero(message, LENGTH);
+
 
     }
     catch_ctrl_c_and_exit(2);
@@ -73,7 +71,6 @@ void receivingThread() {
         str_overwrite_stdout();
         printf("received: %s;\n", message);
          str_overwrite_stdout();
-
         if (receive > 0)
           {
             if(IsCommand(message))
@@ -139,6 +136,7 @@ void receivingThread() {
             // -1
           }
         memset(command, 0, sizeof(command));
+
         memset(message, 0, sizeof(message));
     }
 }
@@ -201,3 +199,4 @@ void execute() {
     close(socketFileDescriptor);
 
 }
+

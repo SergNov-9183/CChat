@@ -1,5 +1,6 @@
 #include "commands.h"
 #include <sys/socket.h>
+
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
@@ -13,6 +14,7 @@ int IsCommand(char* str)
   //printf("%s", "Command?\n");
   int index = strlen(str);
   while(str[--index]==' ');
+
   if(str[0] == '#')
       return 1;
   if(str[0] == '#' && str[index] == '#')
@@ -142,7 +144,6 @@ char** SplitInit(char* message)
     }
   splitted = SplitString(message, '#');
   return splitted;
-
 }
 
 int CommandAnalyzer(char* name, char* message, int socketFileDescriptor)
