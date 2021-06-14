@@ -1,4 +1,5 @@
 #include "commands.h"
+#include "utils.h"
 #include <sys/socket.h>
 
 #include <stdlib.h>
@@ -15,7 +16,7 @@ int IsCommand(char* str)
   int index = strlen(str);
   while(str[--index]==' ');
 
-  if(str[0] == '#')
+  if(str[0] == '#' && str[index] != '#')
       return 1;
   if(str[0] == '#' && str[index] == '#')
       return 2;
@@ -59,6 +60,7 @@ void HelpCommand()
       printf("%s", str);
     }
   printf("\n-------------------------------------\n");
+  str_overwrite_stdout();
   fclose(help);
   return;
 }
@@ -131,12 +133,14 @@ void SendRequest(int socketFileDescriptor, char* textOfRequest, char *message)
     printf("%s\n", message);
   else
     printf("Warning!!!\n");
+  str_overwrite_stdout();
+  return;
 }
 
 char** SplitInit(char* message)
 {
   int gk = GrillCounter(message) + 1;
-  printf("grillcount = %d\nmessage: %s\n", gk, message);
+  //printf("grillcount = %d\nmessage: %s\n", gk, message);
   char** splitted = (char**)malloc(gk * sizeof (char*));
   for (int i = 0; i < gk; ++i)
     {
@@ -148,7 +152,6 @@ char** SplitInit(char* message)
 
 int CommandAnalyzer(char* name, char* message, int socketFileDescriptor)
 {
-  char buffer[LENGTH + 32] = {0};
   char command[COMMAND_LEN] = {0};
   if(IsCommand(message))
     {
@@ -167,13 +170,15 @@ int CommandAnalyzer(char* name, char* message, int socketFileDescriptor)
              {
                if(IsCommandCorrect(message, 3))
                  {
-                   SendRequest(socketFileDescriptor, message, "Request sent (for Private Messaging)");
+                   printf("Request: %s\n", message);
+                   SendRequest(socketFileDescriptor, message, "Request sent (for Private Dialogue)");
 
                  }
                else
                  {
-                   printf("Invalid syntax. Unable to create Private Chat.\n");
+                   printf("Invalid syntax. Unable to create Private Room.\n");
                    printf("Correct syntax: #private#nickname#\n");
+                   str_overwrite_stdout();
                  }
              }
             else
@@ -182,13 +187,14 @@ int CommandAnalyzer(char* name, char* message, int socketFileDescriptor)
                   {
                     if(IsCommandCorrect(message, 3))
                       {
-                        SendRequest(socketFileDescriptor, message, "Request sent (Adding friend)");
+                        SendRequest(socketFileDescriptor, message, "Request sent (Adding Friend)");
 
                       }
                     else
                       {
                         printf("Invalid syntax. Unable to Add Friend.\n");
                         printf("Correct syntax: #add_friend#nickname#\n");
+                        str_overwrite_stdout();
                       }
                   }
                 else
@@ -204,6 +210,7 @@ int CommandAnalyzer(char* name, char* message, int socketFileDescriptor)
                           {
                             printf("Invalid syntax. Unable to Remove Friend.\n");
                             printf("Correct syntax: #remove_friend#nickname#\n");
+                            str_overwrite_stdout();
                           }
                       }
                     else
@@ -212,13 +219,14 @@ int CommandAnalyzer(char* name, char* message, int socketFileDescriptor)
                           {
                             if(IsCommandCorrect(message, 2))
                               {
-                                SendRequest(socketFileDescriptor, message,  "Request sent (Creating Local Chat)");
+                                SendRequest(socketFileDescriptor, message,  "Request sent (Creating Private Room)");
 
                               }
                             else
                               {
                                 printf("Invalid syntax. Unable to Create Local Chat.\n");
                                 printf("Correct syntax: #create_local_chat#\n");
+                                str_overwrite_stdout();
                               }
                           }
                         else
@@ -229,16 +237,16 @@ int CommandAnalyzer(char* name, char* message, int socketFileDescriptor)
                                   {
                                     if(!strcmp(command, "Y"))
                                       {
-                                        printf("Input your data according to pattern:\n");
+                                        printf("\b~ Input your data according to pattern:\n");
                                         printf("\t#NEW_CLIENT#fullname#password#\n");
-                                        send(socketFileDescriptor, message, strlen(message), 0);
+                                        str_overwrite_stdout();
+                                        //send(socketFileDescriptor, message, strlen(message), 0);
 
                                       }
                                     if(!strcmp(command, "N"))
                                       {
-                                        printf("Your session will be closed.\n");
+                                        //printf("\b~ Your session will be closed.\n");
                                         return -1;
-
                                       }
                                   }
                               }
@@ -250,7 +258,7 @@ int CommandAnalyzer(char* name, char* message, int socketFileDescriptor)
                                     if(IsCommandCorrect(message, 4))
                                       {
                                         printf("CommandCorrect\nSent:%s;\n", message);
-                                        SendRequest(socketFileDescriptor, message,  "Request sent (To create an account)");
+                                        SendRequest(socketFileDescriptor, message,  "Request sent (To Create an Account)");
                                       }
                                     else
                                       {
@@ -261,109 +269,45 @@ int CommandAnalyzer(char* name, char* message, int socketFileDescriptor)
                                   }
                                 else
                                   {
-                                    if(!strcmp(command, "WELCOME"))
+                                    if(!strcmp(command, "CLIENT_LIST"))
                                       {
-                                        str_overwrite_stdout();
-                                        FILE* clientsList = fopen("common_clients.txt", "wt");
-
-                                        char ** splMes = SplitInit(message + sizeof(char));
-                                        printf("Successfully connected!\n");
-                                        printf("Now:\t%s participants:\n", splMes[1]);
-                                        for(int i = 2; i < 2 + atoi(splMes[1]); ++i)
+                                        char clients [MAX_CLIENTS][NAME_LENGTH] = {0};
+                                        FILE* clientsList = fopen("common_clients.txt", "rt");
+                                        int ind = 0;
+                                        char str[NAME_LENGTH] = {0};
+                                        while(!feof(clientsList))
                                           {
-                                            fprintf(clientsList, "%s\n", splMes[i]);
-                                            printf("\t\t%s\n", splMes[i]);
+                                            fgets(str, NAME_LENGTH, clientsList);
+                                            str[strlen(str)] = '\0';
+                                            //printf("str = %s, ind = %d\n", str, ind);
+                                            strncpy(clients[ind++], str, NAME_LENGTH);
                                           }
-                                        printf("Now you can send message in common chat or use #HELP# to get more detailed information.\n");
-                                        fclose(clientsList);
-                                        free(splMes);
-                                      }
-                                    else
-                                      {
-                                        if(!strcmp(command, "CLIENT_ENTER"))
+                                        --ind;
+                                        if(!ind)
                                           {
+                                            printf("\b~ There is nobody in this (central) room. Waiting for others...\n");
                                             str_overwrite_stdout();
-                                            FILE* clientsList = fopen("common_clients.txt", "a+");
-                                            char ** splMes = SplitInit(message + sizeof(char));
-                                            printf("%s has joined\n", splMes[1]);
-                                            fprintf(clientsList, "%s\n", splMes[1]);
-                                            fclose(clientsList);
-                                            free(splMes);
                                           }
                                         else
                                           {
-                                            if(!strcmp(command, "CLIENT_LEFT"))
-                                              {
-                                                str_overwrite_stdout();
-                                                char str[NAME_LENGTH] = {0};
-                                                FILE* clientsList = fopen("common_clients.txt", "rt");
-                                                char ** splMes = SplitInit(message + sizeof(char));
-                                                char clients [MAX_CLIENTS][NAME_LENGTH] = {0};
-//                                                char** clients = (char**)malloc(MAX_CLIENTS*sizeof (char*));
-//                                                for(int i = 0; i< MAX_CLIENTS; ++i)
-//                                                  {
-//                                                    clients[i] = (char*)malloc(NAME_LENGTH * sizeof (char));
-//                                                    clients[i] = NULL;
-//                                                  }
-                                                int ind = 0;
-                                                while(!feof(clientsList))
-                                                  {
-                                                    fgets(str, NAME_LENGTH, clientsList);
-                                                    str[strlen(str)] = '\0';
-                                                    printf("str = %s, ind = %d\n", str, ind);
-                                                    strncpy(clients[ind++], str, NAME_LENGTH);
-                                                  }
-                                                printf("Final ind = %d\n", ind);
-                                                fclose(clientsList);
-                                                for(int i = 0; i < ind; ++i)
-                                                  {
-                                                    clients[i][strlen(clients[i])-1] = '\0';
-                                                    if(!strcmp(clients[i], splMes[1]))
-                                                      bzero(clients[i], strlen(clients[i]));
-                                                  }
-                                                bzero(clients[ind-1], strlen(clients[ind-1]));
-                                                clientsList = fopen("common_clients.txt", "wt");
-                                                printf("clients:\n");
-                                                for(int i = 0; i < ind; ++i)
-                                                  {
-                                                    printf("%s", clients[i]);
-                                                    if(strlen(clients[i]))
-                                                      {
-                                                        fprintf(clientsList, "%s\n", clients[i]);
-                                                      }
-                                                  }
-                                                printf("%s has left\n", splMes[1]);
-                                                fclose(clientsList);
-                                                free(splMes);
-                                              }
+                                            printf("\b~ Only\t%d ", ind);
+                                            if(ind == 1)
+                                              printf("participant ");
                                             else
+                                              printf("participants ");
+                                            printf("now:\n");
+                                            for(int i = 0; i < ind; ++i)
                                               {
-                                                if(!strcmp(command, "LIST_CLIENT"))
-                                                  {
-                                                    str_overwrite_stdout();
-                                                    char clients [MAX_CLIENTS][NAME_LENGTH] = {0};
-                                                    FILE* clientsList = fopen("common_clients.txt", "rt");
-                                                    int ind = 0;
-                                                    char str[NAME_LENGTH] = {0};
-                                                    while(!feof(clientsList))
-                                                      {
-                                                        fgets(str, NAME_LENGTH, clientsList);
-                                                        str[strlen(str)] = '\0';
-                                                        printf("str = %s, ind = %d\n", str, ind);
-                                                        strncpy(clients[ind++], str, NAME_LENGTH);
-                                                      }
-                                                    --ind;
-                                                    printf("Now:\t%d participants:\n", ind);
-                                                    for(int i = 0; i < ind; ++i)
-                                                      {
-                                                        printf("%s", clients[i]);
-                                                      }
-                                                    fclose(clientsList);
-                                                  }
+                                                printf("\t\t%s", clients[i]);
                                               }
                                           }
-
+                                        str_overwrite_stdout();
+                                        fclose(clientsList);
                                       }
+
+
+
+
                                   }
                               }
                           }

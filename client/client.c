@@ -18,38 +18,32 @@ static pthread_t recvMessageThread = 0;
 static int socketFileDescriptor = 0;
 static char name[32];
 
-static pthread_t sendMessageThread = 0;
-static pthread_t recvMessageThread = 0;
-
-static int socketFileDescriptor = 0;
-static char name[32];
-
 void sendingThread() {
     char message[LENGTH] = {0};
-    char buffer[LENGTH + 32] = {0};
     char command[COMMAND_LEN] = {0};
 
     while(TRUE) {
-        str_overwrite_stdout();
         fgets(message, MES_LENGTH, stdin);
+        str_overwrite_stdout();
         removeNewLineSymbol(message, MES_LENGTH);
-        if(IsCommand(message))
+        if(IsCommand(message) == 2)
           {
             int res = CommandAnalyzer(name, message, socketFileDescriptor);
             if(res == -1)
               {
-                printf("CommandAnalyzer returned %d\n", res);
+                //printf("CommandAnalyzer returned %d\n", res);
                 break;
               }
           }
         else
           {
-            if (strcmp(message, "exit") == 0)
+
+            if (IsCommand(message) == 1)
               {
-                break;
+                printf("\b~ Is not a Chat command.\n");
+                str_overwrite_stdout();
             } else
               {
-
                 send(socketFileDescriptor, message, strlen(message), 0);
             }
           }
@@ -65,54 +59,82 @@ void sendingThread() {
 void receivingThread() {
     char message[LENGTH] = {0};
     char command[COMMAND_LEN] = {0};
-
     while (TRUE) {
         int receive = recv(socketFileDescriptor, message, LENGTH, 0);
-        str_overwrite_stdout();
-        printf("received: %s;\n", message);
-         str_overwrite_stdout();
         if (receive > 0)
           {
             if(IsCommand(message))
               {
                 CommandDefAndRegUp(message, command);
 
-                printf("command: %s;\n", command);
+                //printf("message: %s;\n", message);
                 if(!strcmp(command, "GET_PASSWORD"))
                   {
-                    printf("Input password: ");
-                    fflush(stdout);
+                    printf("\b~ Input password (%c attempts left): ", message[strlen(message)-3]);
+                    if(message[strlen(message)-2] == 'D')
+                      {
+                        printf("\b~ Access denied. Try again.\n");
+                        exit(0);
+                        //catch_ctrl_c_and_exit(2);
+                      }
+                    str_overwrite_stdout();
                     //break;
 
                   }
                 else
                   if(!strcmp(command, "WELCOME"))
                     {
+                      FILE* clientsList = fopen("common_clients.txt", "wt");
+                      printf("\b\b\n>~ Welcome to chat!\n");
                       str_overwrite_stdout();
                       char ** splMes = SplitInit(message + sizeof(char));
-                      printf("Successfully connected!\n");
-//                      printf("Now:\t%s participants:\n", splMes[1]);
-//                      for(int i = 2; i < 2 + atoi(splMes[1]); ++i)
-//                        {
-//                          printf("\t\t%s", splMes[i]);
-//                        }
-                      printf("Now you can send message in common chat or use #HELP# to get more detailed information.\n");
+                      if(atoi(splMes[1]) == 0)
+                        {
+                          printf("\b~ There is nobody in this (central) room. Waiting for others...\n");
+                          str_overwrite_stdout();
+                        }
+                      else
+                        {
+                          if(!atoi(splMes[1]))
+                            {
+                              printf("\b~ There is nobody in this (central) room. Waiting for others...\n");
+                              str_overwrite_stdout();
+                            }
+                          else
+                            {
+                              printf("\b~ Only\t%d ", atoi(splMes[1]));
+                              if(atoi(splMes[1]) == 1)
+                                printf("participant ");
+                              else
+                                printf("participants ");
+                              printf("now:\n");
+                            }
+                          str_overwrite_stdout();
+                          for(int i = 2; i < 2 + atoi(splMes[1]); ++i)
+                            {
+                              fprintf(clientsList, "%s\n", splMes[i]);
+                              printf("\t\t%s\n", splMes[i]);
+                            }
+                          str_overwrite_stdout();
+                        }
+                      printf("\b~ Now you can send message in common chat or use #HELP# to get more detailed information.\n");
+                      str_overwrite_stdout();
+                      fclose(clientsList);
                       free(splMes);
                     }
                 else{
-                    printf("Not welcome!");
                     if(!strcmp(command, "WRONG_PASSWORD"))
                       {
-                        printf("in WRONG_PASSWORD\n");
                         if(message[strlen(message)-2] == 'D')
                           {
-                            printf("Access denied. Try again.\n");
-                            catch_ctrl_c_and_exit(2);
+                            printf("\b~ Access denied. Try again.\n");
+                            exit(0);
+                            //catch_ctrl_c_and_exit(2);
                           }
                         else
                           {
-                            printf("Wrong password. %c attempts left.\n", message[strlen(message)-2]);
-                            fflush(stdout);
+                            printf("\b~ Wrong password. %c attempts left.\n", message[strlen(message)-2]);
+                            str_overwrite_stdout();
                           }
 
                       }
@@ -120,12 +142,97 @@ void receivingThread() {
                       {
                         if(!strcmp(command, "NOT_REGISTERED"))
                           {
-                            printf("New user? Create an account? (y/n)");
+                            printf("\b~ New user? Create an account? (#Y/N#)");
+                            str_overwrite_stdout();
                           }
-                      }}
+                        else
+                          {
+                            if(!strcmp(command, "WELCOME"))
+                              {
+
+                              }
+                            else
+                              {
+                                if(!strcmp(command, "CLIENT_JOINED"))
+                                  {
+                                    FILE* clientsList = fopen("common_clients.txt", "a+");
+                                    char ** splMes = SplitInit(message + sizeof(char));
+                                    printf("\b~ Client %s has joined\n", splMes[1]);
+                                    str_overwrite_stdout();
+                                    fprintf(clientsList, "%s\n", splMes[1]);
+                                    fclose(clientsList);
+                                    free(splMes);
+                                  }
+                                else
+                                  {
+                                    if(!strcmp(command, "CLIENT_LEFT"))
+                                      {
+                                        char str[NAME_LENGTH] = {0};
+                                        FILE* clientsList = fopen("common_clients.txt", "rt");
+                                        char ** splMes = SplitInit(message + sizeof(char));
+                                        char clients [MAX_CLIENTS][NAME_LENGTH] = {0};
+//                                                char** clients = (char**)malloc(MAX_CLIENTS*sizeof (char*));
+//                                                for(int i = 0; i< MAX_CLIENTS; ++i)
+//                                                  {
+//                                                    clients[i] = (char*)malloc(NAME_LENGTH * sizeof (char));
+//                                                    clients[i] = NULL;
+//                                                  }
+                                        int ind = 0;
+                                        while(!feof(clientsList))
+                                          {
+                                            fgets(str, NAME_LENGTH, clientsList);
+                                            str[strlen(str)] = '\0';
+                                            //printf("str = %s, ind = %d\n", str, ind);
+                                            strncpy(clients[ind++], str, NAME_LENGTH);
+                                          }
+                                        //printf("Final ind = %d\n", ind);
+                                        fclose(clientsList);
+                                        for(int i = 0; i < ind; ++i)
+                                          {
+                                            clients[i][strlen(clients[i])-1] = '\0';
+                                            if(!strcmp(clients[i], splMes[1]))
+                                              bzero(clients[i], strlen(clients[i]));
+                                          }
+                                        bzero(clients[ind-1], strlen(clients[ind-1]));
+                                        clientsList = fopen("common_clients.txt", "wt");
+                                        //printf("clients:\n");
+                                        for(int i = 0; i < ind; ++i)
+                                          {
+                                            //printf("%s", clients[i]);
+                                            if(strlen(clients[i]))
+                                              {
+                                                fprintf(clientsList, "%s\n", clients[i]);
+                                              }
+                                          }
+                                        printf("%s has left\n", splMes[1]);
+                                        str_overwrite_stdout();
+                                        fclose(clientsList);
+                                        free(splMes);
+                                      }
+                                    else
+                                      {
+
+                                      }
+                                  }
+
+                              }
+                          }
+                      }
+
+                    }
+              }
+            else
+              {
+                str_overwrite_stdout();
+                for(int i = 0; i < strlen(message); ++i)
+                 {
+                  if(message[i] == '\n')
+                    message[i] = '@';
+                 }
+                printf("%s\n", message);
+                str_overwrite_stdout();
               }
 
-            str_overwrite_stdout();
           }
         else if (receive == 0)
           {
@@ -145,13 +252,15 @@ Bool init(char *strPort) {
     char *ip = "127.0.0.1";
     int port = atoi(strPort);
 
-    printf("Please enter your name: ");
+    str_overwrite_stdout();
+    printf("\b~ Please enter your name: ");
     fgets(name, 32, stdin);
     removeNewLineSymbol(name, strlen(name));
+    str_overwrite_stdout();
 
 
     if (strlen(name) > 32 || strlen(name) < 2){
-        printf("Name must be less than 30 and more than 2 characters.\n");
+        printf("\b~ Name must be less than 30 and more than 2 characters.\n");
         return FALSE;
     }
 
@@ -168,7 +277,7 @@ Bool init(char *strPort) {
     // Connect to Server
     int error = connect(socketFileDescriptor, (struct sockaddr *)&serverAddress, sizeof(serverAddress));
     if (error == -1) {
-        printf("Can't connect to server\n");
+        printf("\b~ Can't connect to server\n");
         return FALSE;
     }
 
@@ -181,7 +290,7 @@ Bool createSendingThread() {
     if (pthread_create(&sendMessageThread, NULL, (void *) sendingThread, NULL) == 0) {
         return TRUE;
     }
-    printf("Can't create a sending thread\n");
+    printf("\b~ Can't create a sending thread\n");
     return FALSE;
 }
 
@@ -189,13 +298,13 @@ Bool createReceivingThread() {
     if (pthread_create(&recvMessageThread, NULL, (void *) receivingThread, NULL) == 0) {
         return TRUE;
     }
-    printf("Can't create a receiving thread\n");
+    printf("\b~ Can't create a receiving thread\n");
     return FALSE;
 }
 
 void execute() {
     while (run == TRUE);
-    printf("\nBye\n");
+    printf("\n\b~ Your session will be closed...\n");
     close(socketFileDescriptor);
 
 }
