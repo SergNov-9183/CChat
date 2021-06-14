@@ -1,6 +1,10 @@
 #include "server.h"
 
+#ifndef _WIN32
 #include <arpa/inet.h>
+#else
+#include <ws2tcpip.h>
+#endif
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -20,7 +24,13 @@ Bool init(char* strPort) {
     serverAddress.sin_addr.s_addr = inet_addr(ip);
     serverAddress.sin_port = htons(port);
 
-    if(setsockopt(listenFileDescriptor, SOL_SOCKET,(SO_REUSEPORT | SO_REUSEADDR),(char*)&option,sizeof(option)) < 0){
+#ifdef _WIN32
+    int result = setsockopt(listenFileDescriptor, SOL_SOCKET, SO_REUSEADDR, (char*)&option, sizeof(option));
+#else
+    int result = setsockopt(listenFileDescriptor, SOL_SOCKET, SO_REUSEPORT | SO_REUSEADDR, (char*)&option, sizeof(option));
+#endif
+
+    if(result < 0){
         perror("Listening socket configuration error");
         return FALSE;
     }
@@ -54,7 +64,7 @@ void execute() {
             printf("Max clients reached. Rejected: ");
             printClientAddress(clientAddress);
             printf(":%d\n", clientAddress.sin_port);
-            close(socketFileDescriptor);
+            closeSocket(socketFileDescriptor);
             continue;
         }
 

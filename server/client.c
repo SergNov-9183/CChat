@@ -1,5 +1,8 @@
 #include "client.h"
 
+#ifdef _WIN32
+#include <winsock2.h>
+#endif
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -55,7 +58,11 @@ void buildPrivateFileName(char* fileName, int id1, int id2) {
 }
 
 Bool sendMessage(int socketFileDescriptor, char* message) {
+#ifndef _WIN32
     if(socketFileDescriptor < 1 || write(socketFileDescriptor, message, strlen(message)) < 0){
+#else
+    if(socketFileDescriptor < 1 || send((SOCKET)socketFileDescriptor, message, strlen(message), 0) < 0){
+#endif
         perror("Error sending message to the client");
         return FALSE;
     }
@@ -438,7 +445,7 @@ void* clientThread(void* value){
     }
 
     // Delete client from client list and yield thread
-    close(socketFileDescriptor);
+    closeSocket(socketFileDescriptor);
     pthread_detach(pthread_self());
 
     return NULL;
@@ -451,8 +458,8 @@ void closeAllClients() {
     pthread_mutex_lock(&clients_mutex);
     for(int i = 0; i < clientCount; ++i){
         if (clients[i]->socketFileDescriptor > 0){
-            write(clients[i]->socketFileDescriptor, message, strlen(message));
-            close(clients[i]->socketFileDescriptor);
+            sendMessage(clients[i]->socketFileDescriptor, message);
+            closeSocket(clients[i]->socketFileDescriptor);
             printf("%s thread is terminated\n", clients[i]->nickName);
             free(clients[i]);
         }
