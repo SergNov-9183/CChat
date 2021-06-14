@@ -8,18 +8,25 @@
 
 #include "utils.h"
 
-#define BUFFER_SIZE 2048
 #define CLIENTS_FILE_NAME "clients.txt"
+#define MAINROOM_FILE_NAME "mainRoom.txt"
+#define FILENAME_LENGTH 255
+#define COMMAND_LENGTH 32
 #define NICKNAME_LENGTH 32
 #define FULLNAME_LENGTH 50
 #define PASSWORD_LENGTH 30
+#define ROOMNAME_LENGTH 32
+
+typedef enum { Message, Private, Exit } ClientCommands;
 
 // Client structure
 typedef struct{
+    int id;
     int socketFileDescriptor;
     char nickName[NICKNAME_LENGTH];
     char fullName[FULLNAME_LENGTH];
     char password[PASSWORD_LENGTH];
+    int room;
 } Client;
 
 _Atomic int clientCount = 0;
@@ -29,6 +36,16 @@ FILE* clientsFile = NULL;
 Client* clients[MAX_CLIENT_COUNT];
 
 pthread_mutex_t clients_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t file_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+void buildPrivateFileName(char* fileName, int id1, int id2) {
+    if (id1 < id2) {
+        sprintf(fileName, "private%dand%d.txt", id1, id2);
+    }
+    else {
+        sprintf(fileName, "private%dand%d.txt", id2, id1);
+    }
+}
 
 Bool sendMessage(int socketFileDescriptor, char* message) {
     if(socketFileDescriptor < 1 || write(socketFileDescriptor, message, strlen(message)) < 0){
@@ -38,6 +55,16 @@ Bool sendMessage(int socketFileDescriptor, char* message) {
     return TRUE;
 }
 
+void sendServiceMessageToClients(char* message, Client* client) {
+    pthread_mutex_lock(&clients_mutex);
+    for(int i = 0; i < clientCount; ++i){
+        if(clients[i]->id != client->id && clients[i]->socketFileDescriptor > 0){
+            sendMessage(clients[i]->socketFileDescriptor, message);
+        }
+    }
+    pthread_mutex_unlock(&clients_mutex);
+}
+
 Client* addClient(char* nickName, char* fullName, char* password, Bool writeToFile){
     Client* client = (Client*)malloc(sizeof(Client));
     if (client) {
@@ -45,10 +72,12 @@ Client* addClient(char* nickName, char* fullName, char* password, Bool writeToFi
         strcpy(client->nickName, nickName);
         strcpy(client->fullName, fullName);
         strcpy(client->password, password);
+        client->room = 0;
 
         pthread_mutex_lock(&clients_mutex);
         clients[clientCount] = client;
         ++clientCount;
+        client->id = clientCount;
         if (writeToFile == TRUE && clientsFile != NULL) {
             char data[BUFFER_SIZE] = { 0 };
             sprintf(data, "#%s#%s#%s#\n", client->nickName, client->fullName, client->password);
@@ -59,52 +88,122 @@ Client* addClient(char* nickName, char* fullName, char* password, Bool writeToFi
     return client;
 }
 
-void sendMessageToClients(char* message, int senderClientId){
-    pthread_mutex_lock(&clients_mutex);
-    for(int i = 0; i < clientCount; ++i){
-        if(i != senderClientId && clients[i]->socketFileDescriptor > 0){
-            sendMessage(clients[i]->socketFileDescriptor, message);
-        }
-    }
-    pthread_mutex_unlock(&clients_mutex);
-}
-
-int findClient(char* nickName) {
-    int clientId = -1;
+Client* findClient(char* nickName) {
+    Client* result = NULL;
     pthread_mutex_lock(&clients_mutex);
     for(int i = 0; i < clientCount; ++i){
         if(strcmp(clients[i]->nickName, nickName) == 0) {
-            clientId = i;
+            result = clients[i];
             break;
         }
     }
     pthread_mutex_unlock(&clients_mutex);
-    return clientId;
+    return result;
 }
 
-int registration(int socketFileDescriptor, char* nickName) {
+Client* findClientById(int id) {
+    Client* result = NULL;
+    pthread_mutex_lock(&clients_mutex);
+    for(int i = 0; i < clientCount; ++i){
+        if(clients[i]->id == id) {
+            result = clients[i];
+            break;
+        }
+    }
+    pthread_mutex_unlock(&clients_mutex);
+    return result;
+}
+
+void saveMessageFromClient(char* message, char* fileName) {
+    pthread_mutex_lock(&file_mutex);
+    FILE* file = fopen(fileName, "at");
+    if (file) {
+        fputs(message, file);
+        fclose(file);
+    }
+    pthread_mutex_unlock(&file_mutex);
+}
+
+void loadMessagesForClient(Client* client, char* fileName) {
+    pthread_mutex_lock(&file_mutex);
+    FILE* file = fopen(fileName, "rt");
+    if (file) {
+        while (!feof(file)) {
+            char message[BUFFER_SIZE] = { 0 };
+            if (fgets(message, BUFFER_SIZE, file)) {
+                sendMessage(client->socketFileDescriptor, message);
+            }
+        }
+        fclose(file);
+    }
+    pthread_mutex_unlock(&file_mutex);
+}
+
+void sendMessageToClients(char* message, Client* client){
+    char msg[BUFFER_SIZE] = { 0 };
+    sprintf(msg, "%s->%s", client->nickName, message);
+    if (client->room == 0) {
+        saveMessageFromClient(msg, MAINROOM_FILE_NAME);
+        pthread_mutex_lock(&clients_mutex);
+        for(int i = 0; i < clientCount; ++i){
+            if(clients[i]->id != client->id && clients[i]->socketFileDescriptor > 0){
+                if (clients[i]->room == 0) {
+                    sendMessage(clients[i]->socketFileDescriptor, msg);
+                }
+                else {
+                    char infoMessage[BUFFER_SIZE] = { 0 };
+                    sprintf(infoMessage, "%s sent message in main room\n", client->nickName);
+                    sendMessage(clients[i]->socketFileDescriptor, infoMessage);
+                }
+            }
+        }
+        pthread_mutex_unlock(&clients_mutex);
+    }
+    else if (client->room < 0) {
+        Client* partner = findClientById(-client->room);
+        if (partner) {
+            char fileName[FILENAME_LENGTH] = { 0 };
+            buildPrivateFileName(fileName, client->id, partner->id);
+            saveMessageFromClient(msg, fileName);
+            if (partner->socketFileDescriptor > 0) {
+                if (partner->room == -client->id) {
+                    sendMessage(partner->socketFileDescriptor, msg);
+                }
+                else {
+                    char infoMessage[BUFFER_SIZE] = { 0 };
+                    sprintf(infoMessage, "%s sent you a message\n", client->nickName);
+                    sendMessage(partner->socketFileDescriptor, infoMessage);
+                }
+            }
+        }
+    }
+
+    removeNewLineSymbol(message, strlen(message));
+    printf("Client %s send message: %s\n", client->nickName, message);
+}
+
+Client* registration(int socketFileDescriptor, char* nickName) {
     if (sendMessage(socketFileDescriptor, "#NOT_REGISTERED#") == FALSE) {
-        return -1;
+        return NULL;
     }
     char data[BUFFER_SIZE] = { 0 };
     if(recv(socketFileDescriptor, data, BUFFER_SIZE, 0) <= 0 || strlen(data) <  17){
         perror("Can't get client data");
-        return -1;
+        return NULL;
     }
 
-    char command[BUFFER_SIZE] = { 0 };
-    int idx = getValue(data, command, 1);
+    char command[COMMAND_LENGTH] = { 0 };
+    int idx = getValue(data, command, 0);
     if (strcmp(command, "NEW_CLIENT") == 0) {
         char fullName[FULLNAME_LENGTH] = { 0 };
         idx = getValue(data, fullName, idx);
         char password[PASSWORD_LENGTH] = { 0 };
         getValue(data, password, idx);
 
-        addClient(nickName, fullName, password, TRUE);
-        return findClient(nickName);
+        return addClient(nickName, fullName, password, TRUE);
     }
     perror("Invalid registration answer");
-    return -1;
+    return NULL;
 }
 
 void buildWelcome(char* message, int clientId) {
@@ -112,7 +211,7 @@ void buildWelcome(char* message, int clientId) {
     char activeClients[BUFFER_SIZE] = { 0 };
     pthread_mutex_lock(&clients_mutex);
     for(int i = 0; i < clientCount; ++i){
-        if(i != clientId && clients[i]->socketFileDescriptor > 0) {
+        if(clients[i]->id != clientId && clients[i]->socketFileDescriptor > 0) {
             ++activeClientCount;
             char client[BUFFER_SIZE] = { 0 };
             sprintf(client, "%s#", clients[i]->nickName);
@@ -123,11 +222,7 @@ void buildWelcome(char* message, int clientId) {
     sprintf(message, "#WELCOME#%d#%s\n", activeClientCount, activeClients);
 }
 
-Bool getPassword(int socketFileDescriptor, int clientId) {
-    pthread_mutex_lock(&clients_mutex);
-    Client* client = clients[clientId];
-    pthread_mutex_unlock(&clients_mutex);
-
+Bool getPassword(int socketFileDescriptor, Client* client) {
     if (client) {
         int attemptsLeft = 3;
         while (attemptsLeft > 0) {
@@ -144,7 +239,7 @@ Bool getPassword(int socketFileDescriptor, int clientId) {
             removeNewLineSymbol(data, strlen(data));
             if(strcmp(client->password, data) == 0) {
                 char welcomeMessage[BUFFER_SIZE] = { 0 };
-                buildWelcome(welcomeMessage, clientId);
+                buildWelcome(welcomeMessage, client->id);
                 sendMessage(socketFileDescriptor, welcomeMessage);
                 return TRUE;
             }
@@ -155,71 +250,111 @@ Bool getPassword(int socketFileDescriptor, int clientId) {
     return FALSE;
 }
 
-void clienJoined(int clientId, int socketFileDescriptor) {
-    pthread_mutex_lock(&clients_mutex);
-    Client* client = clients[clientId];
-    pthread_mutex_unlock(&clients_mutex);
-
-    char message[BUFFER_SIZE];
-    sprintf(message, "#CLIENT_JOINED#%s#\n", client->nickName);
-    printf("%s", message);
-    client->socketFileDescriptor = socketFileDescriptor;
-    sendMessageToClients(message, clientId);
+void clienJoined(Client* client, int socketFileDescriptor) {
+    if (client) {
+        char message[BUFFER_SIZE];
+        sprintf(message, "#CLIENT_JOINED#%s#\n", client->nickName);
+        client->socketFileDescriptor = socketFileDescriptor;
+        loadMessagesForClient(client, MAINROOM_FILE_NAME);
+        sendServiceMessageToClients(message, client);
+    }
 }
 
-void clienLeft(int clientId) {
-    pthread_mutex_lock(&clients_mutex);
-    Client* client = clients[clientId];
-    pthread_mutex_unlock(&clients_mutex);
-
-    char message[BUFFER_SIZE];
-    sprintf(message, "#CLIENT_LEFT#%s#\n", client->nickName);
-    printf("%s", message);
-    client->socketFileDescriptor = 0;
-    sendMessageToClients(message, clientId);
+void clienLeft(Client* client) {
+    if (client) {
+        char message[BUFFER_SIZE];
+        sprintf(message, "#CLIENT_LEFT#%s#\n", client->nickName);
+        client->socketFileDescriptor = 0;
+        sendServiceMessageToClients(message, client);
+    }
 }
 
-int signIn(int socketFileDescriptor, char* nickName) {
-    int clientId = -1;
+Client* signIn(int socketFileDescriptor) {
+    Client* client = NULL;
+    char nickName[NICKNAME_LENGTH] = { 0 };
     if(recv(socketFileDescriptor, nickName, NICKNAME_LENGTH, 0) <= 0 || strlen(nickName) <  2 || strlen(nickName) >= NICKNAME_LENGTH-1){
         printf("Didn't enter the nickname.\n");
     }
     else {
-        clientId = findClient(nickName);
-        if (clientId < 0) {
-            clientId = registration(socketFileDescriptor, nickName);
+        client = findClient(nickName);
+        if (!client) {
+            client = registration(socketFileDescriptor, nickName);
         }
-        if (clientId < 0) {
+        if (!client) {
             printf("Client connection error\n");
         }
-        else if (getPassword(socketFileDescriptor, clientId) == FALSE){
+        else if (getPassword(socketFileDescriptor, client) == FALSE){
             printf("Wrong password, client %s disconnected\n", nickName);
-            clientId = -1;
+            client = NULL;
         }
     }
-    return clientId;
+    return client;
+}
+
+void executePrivate(Client* client, char* nickName) {
+    Client* partner = findClient(nickName);
+    if (client && partner) {
+        char fileName[FILENAME_LENGTH] = { 0 };
+        buildPrivateFileName(fileName, client->id, partner->id);
+        loadMessagesForClient(client, fileName);
+        client->room = -partner->id;
+    }
+
+}
+
+void executeExit(Client* client) {
+    if (client) {
+        client->room = 0;
+        loadMessagesForClient(client, MAINROOM_FILE_NAME);
+    }
+}
+
+ClientCommands getCommand(char* message, char* nickName, char* chatName) {
+    ClientCommands result = Message;
+    char command[COMMAND_LENGTH] = { 0 };
+    int idx = getValue(message, command, 0);
+    if (strcmp(command, "PRIVATE") == 0) {
+        getValue(message, nickName, idx);
+        result = Private;
+    }
+    else if (strcmp(command, "EXIT") == 0) {
+        result = Exit;
+    }
+    return result;
+}
+
+void messageHandler(char* message, Client* client) {
+    char nickName[NICKNAME_LENGTH] = { 0 };
+    char chatName[ROOMNAME_LENGTH] = { 0 };
+    ClientCommands command = getCommand(message, nickName, chatName);
+    switch (command) {
+    case Private:
+        executePrivate(client, nickName);
+        break;
+    case Exit:
+        executeExit(client);
+        break;
+    default:
+        sendMessageToClients(message, client);
+        break;
+    }
 }
 
 void* clientThread(void* value){
     int socketFileDescriptor = unpackInt(value);
-    char nickName[NICKNAME_LENGTH] = { 0 };
-    int clientId = signIn(socketFileDescriptor, nickName);
-    if (clientId >= 0) {
-        clienJoined(clientId, socketFileDescriptor);
+    Client* client = signIn(socketFileDescriptor);
+    if (client) {
+        clienJoined(client, socketFileDescriptor);
 
-        char buffOut[BUFFER_SIZE];
         while(TRUE){
-            bzero(buffOut, BUFFER_SIZE);
-            int receive = recv(socketFileDescriptor, buffOut, BUFFER_SIZE, 0);
+            char buffer[BUFFER_SIZE] = { 0 };
+            int receive = recv(socketFileDescriptor, buffer, BUFFER_SIZE, 0);
             if (receive > 0){
-                if(strlen(buffOut) > 0){
-                    sendMessageToClients(buffOut, clientId);
-
-                    removeNewLineSymbol(buffOut, strlen(buffOut));
-                    printf("%s -> %s\n", buffOut, nickName);
+                if(strlen(buffer) > 0){
+                    messageHandler(buffer, client);
                 }
-            } else if (receive == 0 || strcmp(buffOut, "exit") == 0){
-                clienLeft(clientId);
+            } else if (receive == 0 || strcmp(buffer, "exit") == 0){
+                clienLeft(client);
                 break;
             } else {
                 printf("ERROR: -1\n");
@@ -262,7 +397,7 @@ void loadClients() {
             char data[BUFFER_SIZE] = { 0 };
             if (fgets(data, BUFFER_SIZE, clientsFile)) {
                 char nickName[NICKNAME_LENGTH] = { 0 };
-                int idx = getValue(data, nickName, 1);
+                int idx = getValue(data, nickName, 0);
                 char fullName[FULLNAME_LENGTH] = { 0 };
                 idx = getValue(data, fullName, idx);
                 char password[PASSWORD_LENGTH] = { 0 };

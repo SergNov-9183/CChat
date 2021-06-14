@@ -4,9 +4,11 @@
 #include <netinet/in.h>
 #include <signal.h>
 
-typedef char Bool;
+#define BUFFER_SIZE 2048
 #define TRUE 1
 #define FALSE 0
+
+typedef char Bool;
 
 extern int listenFileDescriptor;
 extern volatile sig_atomic_t run;
