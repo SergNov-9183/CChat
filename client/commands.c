@@ -165,6 +165,7 @@ int CommandAnalyzer(char* name, char* message, int socketFileDescriptor)
          if(!strcmp(command, "EXIT"))
            {
              printf("You have been to the Central Room. Have a good time!\n");
+             send(socketFileDescriptor, message, strlen(message), 0);
              str_overwrite_stdout();
            }
          else
@@ -313,7 +314,10 @@ int CommandAnalyzer(char* name, char* message, int socketFileDescriptor)
                                           {
                                             if(IsCommandCorrect(message, 3))
                                               {
-                                                SendRequest(socketFileDescriptor, message,  "---\nYou have just created the Common Room.\n");
+                                                char buf[LENGTH] = {0};
+                                                char ** splMes = SplitInit(message + sizeof(char));
+                                                sprintf(buf, "---\nYou have just created the Common Room (%s).", splMes[1]);
+                                                SendRequest(socketFileDescriptor, message,  buf);
                                                 printf(">~ You can use #Help# to get more specific information.\n");
                                                 str_overwrite_stdout();
                                               }
@@ -331,7 +335,10 @@ int CommandAnalyzer(char* name, char* message, int socketFileDescriptor)
 
                                                 if(IsCommandCorrect(message, 3))
                                                   {
-                                                    SendRequest(socketFileDescriptor, message,  "You have moved to the Common Room.\n");
+                                                    char buf[LENGTH] = {0};
+                                                    char ** splMes = SplitInit(message + sizeof(char));
+                                                    sprintf(buf, "\b~ You have moved to the Common Room (%s).", splMes[1]);
+                                                    SendRequest(socketFileDescriptor, message, buf);
                                                     printf(">~ You can use #Help# to get more relevant information.\n");
                                                     str_overwrite_stdout();
                                                   }
@@ -349,7 +356,9 @@ int CommandAnalyzer(char* name, char* message, int socketFileDescriptor)
 
                                                     if(IsCommandCorrect(message, 3))
                                                       {
-                                                        SendRequest(socketFileDescriptor, message,  "\b~ You've just invited new Client to your chat.");
+                                                        char ** splMes = SplitInit(message + sizeof(char));
+                                                        sprintf(buffer, "\b~ You've just invited %s to this Room.\n", splMes[1]);
+                                                        SendRequest(socketFileDescriptor, message,  buffer);
                                                         str_overwrite_stdout();
                                                       }
                                                     else

@@ -219,7 +219,7 @@ void receivingThread() {
                                         if(!strcmp(command, "INVITATION_TO_CLIENT"))
                                           {
                                             char ** splMes = SplitInit(message + sizeof(char));
-                                            printf("You were invited to the Common Room (%s) by %s\n", splMes[2], splMes[1]);
+                                            printf("\b~ You were invited to the Common Room (%s) by %s.\n", splMes[2], splMes[1]);
                                             str_overwrite_stdout();
                                           }
 
