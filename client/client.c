@@ -20,12 +20,13 @@ static char name[32];
 
 void sendingThread() {
     char message[LENGTH] = {0};
+    char buffer[LENGTH] = {0};
     char command[COMMAND_LEN] = {0};
 
     while(TRUE) {
-        fgets(message, MES_LENGTH, stdin);
+        fgets(message, LENGTH, stdin);
         str_overwrite_stdout();
-        removeNewLineSymbol(message, MES_LENGTH);
+        //removeNewLineSymbol(message, LENGTH);
         if(IsCommand(message) == 2)
           {
             int res = CommandAnalyzer(name, message, socketFileDescriptor);
@@ -44,7 +45,8 @@ void sendingThread() {
                 str_overwrite_stdout();
             } else
               {
-                send(socketFileDescriptor, message, strlen(message), 0);
+                sprintf(buffer, "%s\n", message);
+                send(socketFileDescriptor, buffer, strlen(message), 0);
             }
           }
 
@@ -90,14 +92,14 @@ void receivingThread() {
                       char ** splMes = SplitInit(message + sizeof(char));
                       if(atoi(splMes[1]) == 0)
                         {
-                          printf("\b~ There is nobody in this (central) room. Waiting for others...\n");
+                          printf("\b~ There is nobody in this (central) Room. Waiting for others...\n");
                           str_overwrite_stdout();
                         }
                       else
                         {
                           if(!atoi(splMes[1]))
                             {
-                              printf("\b~ There is nobody in this (central) room. Waiting for others...\n");
+                              printf("\b~ There is nobody in this (Central) Room. Waiting for others...\n");
                               str_overwrite_stdout();
                             }
                           else
@@ -117,7 +119,7 @@ void receivingThread() {
                             }
                           str_overwrite_stdout();
                         }
-                      printf("\b~ Now you can send message in common chat or use #HELP# to get more detailed information.\n");
+                      printf("\b~ Now you can send message in Central Room or use #HELP# to get more detailed information.\n");
                       str_overwrite_stdout();
                       fclose(clientsList);
                       free(splMes);
@@ -159,7 +161,7 @@ void receivingThread() {
                                     char ** splMes = SplitInit(message + sizeof(char));
                                     printf("\b~ Client %s has joined\n", splMes[1]);
                                     str_overwrite_stdout();
-                                    fprintf(clientsList, "%s\n", splMes[1]);
+                                    fprintf(clientsList, "%s", splMes[1]);
                                     fclose(clientsList);
                                     free(splMes);
                                   }
@@ -204,7 +206,7 @@ void receivingThread() {
                                                 fprintf(clientsList, "%s\n", clients[i]);
                                               }
                                           }
-                                        printf("%s has left\n", splMes[1]);
+                                        printf("\b~ Client %s has left\n", splMes[1]);
                                         str_overwrite_stdout();
                                         fclose(clientsList);
                                         free(splMes);
@@ -224,11 +226,6 @@ void receivingThread() {
             else
               {
                 str_overwrite_stdout();
-                for(int i = 0; i < strlen(message); ++i)
-                 {
-                  if(message[i] == '\n')
-                    message[i] = '@';
-                 }
                 printf("%s\n", message);
                 str_overwrite_stdout();
               }
