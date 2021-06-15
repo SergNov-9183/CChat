@@ -283,7 +283,7 @@ int CommandAnalyzer(char* name, char* message, int socketFileDescriptor)
                                           {
                                             fgets(str, NAME_LENGTH, clientsList);
                                             str[strlen(str)] = '\0';
-                                            //printf("str = %s, ind = %d\n", str, ind);
+                                            printf("str = %s, ind = %d\n", str, ind);
                                             strncpy(clients[ind++], str, NAME_LENGTH);
                                           }
                                         --ind;
@@ -300,7 +300,7 @@ int CommandAnalyzer(char* name, char* message, int socketFileDescriptor)
                                             else
                                               printf("participants ");
                                             printf("now:\n");
-                                            for(int i = 0; i <= ind; ++i)
+                                            for(int i = 0; i < ind; ++i)
                                               {
                                                 printf("\t\t%s\n", clients[i]);
                                               }
