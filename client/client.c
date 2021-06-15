@@ -162,10 +162,10 @@ void receivingThread() {
                                     char ** splMes = SplitInit(message + sizeof(char));
                                     printf("\b~ Client %s has joined\n", splMes[1]);
                                     str_overwrite_stdout();
-                                    fprintf(clientsList, "%s", splMes[1]);
-                                    printf("Client %s is added to a clients list.\n", splMes[1]);
-                                    str_overwrite_stdout();
+                                    fprintf(clientsList, "%s\n", splMes[1]);
+                                    printf("\b~ Client %s is added to a clients list.\n", splMes[1]);
                                     fclose(clientsList);
+                                    str_overwrite_stdout();
                                     free(splMes);
                                   }
                                 else
