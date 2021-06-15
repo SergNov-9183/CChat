@@ -1,9 +1,18 @@
-Использование: #<команда>#<параметр>#
+Usage: #COMMAND#parameter1#parameter2#...
 
-Для настроек доступа и функций используйте следующие команды:
-	#PRIVATE#ник клиента#				- создание приватного чата.
-	#EXIT#								- выход из чата.
-	#ADD_FRIEND#ник клиента#			- добавить в друзья по нику.
-	#REMOVE_FRIEND#ник клиента#			- удалить из друзей по нику.
-	#CREATE_LOCAL_CHAT#					
-	#ADD_CLIENT_TO_CHAT#ник клиента#
+System calls: 
+|
+|	#HELP#							---specific usage information
+|	<ctrl+C>						---instant exit
+|	#NEW_CLIENT#fullname#password#	---to add new user
+|	#CLIENT_LIST#					---list of currently connnected Clients
+|
+|	#PRIVATE#client_name#		  ---to move into space for personal messaging
+|
+|	#ADD_ROOM#roomname#			---to create a Common Room (for several Clients)
+|	#GO_TO_ROOM#roomname#		---to move into Common Room
+|	#INVITE_CLIENT#client_name#	---to invite Client into Common Room
+
+*After the entrance you are moved into the Central Room, that inludes every client.
+*PRIVATE messaging allows you to send direct messages with a notification for a recipient.
+*Common Rooms are for groups to have easier way of communication.

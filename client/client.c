@@ -104,7 +104,7 @@ void receivingThread() {
                             }
                           else
                             {
-                              printf("\b~ Only\t%d ", atoi(splMes[1]));
+                              printf("\b~ Only %d ", atoi(splMes[1]));
                               if(atoi(splMes[1]) == 1)
                                 printf("participant ");
                               else
@@ -119,7 +119,7 @@ void receivingThread() {
                             }
                           str_overwrite_stdout();
                         }
-                      printf("\b~ Now you can send message in Central Room or use #HELP# to get more detailed information.\n");
+                      printf("\b~ Now you can send message in Central Room or use #HELP# to get more detailed information.\n\n");
                       str_overwrite_stdout();
                       fclose(clientsList);
                       free(splMes);
@@ -158,10 +158,13 @@ void receivingThread() {
                                 if(!strcmp(command, "CLIENT_JOINED"))
                                   {
                                     FILE* clientsList = fopen("common_clients.txt", "a+");
+                                    printf("File clients is opened\n");
                                     char ** splMes = SplitInit(message + sizeof(char));
                                     printf("\b~ Client %s has joined\n", splMes[1]);
                                     str_overwrite_stdout();
                                     fprintf(clientsList, "%s", splMes[1]);
+                                    printf("Client %s is added to a clients list.\n", splMes[1]);
+                                    str_overwrite_stdout();
                                     fclose(clientsList);
                                     free(splMes);
                                   }
@@ -213,6 +216,12 @@ void receivingThread() {
                                       }
                                     else
                                       {
+                                        if(!strcmp(command, "INVITATION_TO_CLIENT"))
+                                          {
+                                            char ** splMes = SplitInit(message + sizeof(char));
+                                            printf("You were invited to the Common Room (%s) by %s\n", splMes[2], splMes[1]);
+                                            str_overwrite_stdout();
+                                          }
 
                                       }
                                   }

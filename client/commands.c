@@ -52,14 +52,13 @@ void HelpCommand()
   if(!help)
     printf("error open file\n");
   char str[NAME_LENGTH] = {0};
-  printf("-------------------------------------");
-  printf("\n");
+  printf("-------------------------------------\n");
   while(!feof(help))
     {
       fgets(str, NAME_LENGTH, help);
       printf("%s", str);
     }
-  printf("\n-------------------------------------\n");
+  printf("-------------------------------------\n");
   str_overwrite_stdout();
   fclose(help);
   return;
@@ -294,7 +293,7 @@ int CommandAnalyzer(char* name, char* message, int socketFileDescriptor)
                                           }
                                         else
                                           {
-                                            printf("\b~ Only\t%d ", ind);
+                                            printf("\b~ Only %d ", ind);
                                             if(ind == 1)
                                               printf("participant ");
                                             else
@@ -302,7 +301,7 @@ int CommandAnalyzer(char* name, char* message, int socketFileDescriptor)
                                             printf("now:\n");
                                             for(int i = 0; i <= ind; ++i)
                                               {
-                                                printf("\t\t%s", clients[i]);
+                                                printf("\t\t%s\n", clients[i]);
                                               }
                                           }
                                         str_overwrite_stdout();
@@ -350,13 +349,13 @@ int CommandAnalyzer(char* name, char* message, int socketFileDescriptor)
 
                                                     if(IsCommandCorrect(message, 3))
                                                       {
-                                                        SendRequest(socketFileDescriptor, message,  "You've just invited new Client.");
+                                                        SendRequest(socketFileDescriptor, message,  "\b~ You've just invited new Client to your chat.");
                                                         str_overwrite_stdout();
                                                       }
                                                     else
                                                     {
                                                         printf("\b~ Invalid syntax. Unable to Create New Account.\n");
-                                                        printf(">~ Correct syntax: #INVITE_CLIENT#fullname#password#\n");
+                                                        printf(">~ Correct syntax: #INVITE_CLIENT#nickname#\n");
                                                         str_overwrite_stdout();
                                                     }
                                                   }
