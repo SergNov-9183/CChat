@@ -14,7 +14,7 @@ int IsCommand(char* str)
 {
   //printf("%s", "Command?\n");
   int index = strlen(str);
-  while(str[--index]==' ');
+  while(str[--index]==' ' || str[--index]=='\n');
 
   if(str[0] == '#' && str[index] != '#')
       return 1;
@@ -153,6 +153,7 @@ char** SplitInit(char* message)
 int CommandAnalyzer(char* name, char* message, int socketFileDescriptor)
 {
   char command[COMMAND_LEN] = {0};
+  char buffer[LENGTH] = {0};
   if(IsCommand(message))
     {
       //printf("%s - message\n", message);
@@ -163,21 +164,24 @@ int CommandAnalyzer(char* name, char* message, int socketFileDescriptor)
      else
        {
          if(!strcmp(command, "EXIT"))
-           return -1;
+           {
+             printf("You have been to the Central Room. Have a good time!\n");
+             str_overwrite_stdout();
+           }
          else
            {
              if(!strcmp(command, "PRIVATE"))
              {
                if(IsCommandCorrect(message, 3))
                  {
-                   printf("Request: %s\n", message);
+                   //printf("Request: %s\n", message);
                    SendRequest(socketFileDescriptor, message, "Request sent (for Private Dialogue)");
-
+                   str_overwrite_stdout();
                  }
                else
                  {
-                   printf("Invalid syntax. Unable to create Private Room.\n");
-                   printf("Correct syntax: #private#nickname#\n");
+                   printf("\b~ Invalid syntax. Unable to create Private Room.\n");
+                   printf(">~ Correct syntax: #private#nickname#\n");
                    str_overwrite_stdout();
                  }
              }
@@ -192,8 +196,8 @@ int CommandAnalyzer(char* name, char* message, int socketFileDescriptor)
                       }
                     else
                       {
-                        printf("Invalid syntax. Unable to Add Friend.\n");
-                        printf("Correct syntax: #add_friend#nickname#\n");
+                        printf("\b~ Invalid syntax. Unable to Add Friend.\n");
+                        printf(">~ Correct syntax: #add_friend#nickname#\n");
                         str_overwrite_stdout();
                       }
                   }
@@ -204,12 +208,12 @@ int CommandAnalyzer(char* name, char* message, int socketFileDescriptor)
                         if(IsCommandCorrect(message, 3))
                           {
                             SendRequest(socketFileDescriptor, message, "Request sent (Removing Friend)");
-
+                            str_overwrite_stdout();
                           }
                         else
                           {
-                            printf("Invalid syntax. Unable to Remove Friend.\n");
-                            printf("Correct syntax: #remove_friend#nickname#\n");
+                            printf("\b~ Invalid syntax. Unable to Remove Friend.\n");
+                            printf(">~ Correct syntax: #remove_friend#nickname#\n");
                             str_overwrite_stdout();
                           }
                       }
@@ -220,12 +224,12 @@ int CommandAnalyzer(char* name, char* message, int socketFileDescriptor)
                             if(IsCommandCorrect(message, 2))
                               {
                                 SendRequest(socketFileDescriptor, message,  "Request sent (Creating Private Room)");
-
+                                str_overwrite_stdout();
                               }
                             else
                               {
-                                printf("Invalid syntax. Unable to Create Local Chat.\n");
-                                printf("Correct syntax: #create_local_chat#\n");
+                                printf("\b~ Invalid syntax. Unable to Create Local Chat.\n");
+                                printf(">~ Correct syntax: #create_local_chat#\n");
                                 str_overwrite_stdout();
                               }
                           }
@@ -238,7 +242,7 @@ int CommandAnalyzer(char* name, char* message, int socketFileDescriptor)
                                     if(!strcmp(command, "Y"))
                                       {
                                         printf("\b~ Input your data according to pattern:\n");
-                                        printf("\t#NEW_CLIENT#fullname#password#\n");
+                                        printf(">~ \t#NEW_CLIENT#fullname#password#\n");
                                         str_overwrite_stdout();
                                         //send(socketFileDescriptor, message, strlen(message), 0);
 
@@ -257,14 +261,14 @@ int CommandAnalyzer(char* name, char* message, int socketFileDescriptor)
                                     printf("#NEW_CLIENT# called\n");
                                     if(IsCommandCorrect(message, 4))
                                       {
-                                        printf("CommandCorrect\nSent:%s;\n", message);
                                         SendRequest(socketFileDescriptor, message,  "Request sent (To Create an Account)");
+                                        str_overwrite_stdout();
                                       }
                                     else
                                       {
-                                        printf("CommandINcorrect\n");
-                                        printf("Invalid syntax. Unable to Create New Account.\n");
-                                        printf("Correct syntax: #NEW_CLIENT#fullname#password#\n");
+                                        printf("\b~ Invalid syntax. Unable to create New Account.\n");
+                                        printf(">~ Correct syntax: #NEW_CLIENT#fullname#password#\n");
+                                        str_overwrite_stdout();
                                       }
                                   }
                                 else
@@ -296,13 +300,68 @@ int CommandAnalyzer(char* name, char* message, int socketFileDescriptor)
                                             else
                                               printf("participants ");
                                             printf("now:\n");
-                                            for(int i = 0; i < ind; ++i)
+                                            for(int i = 0; i <= ind; ++i)
                                               {
                                                 printf("\t\t%s", clients[i]);
                                               }
                                           }
                                         str_overwrite_stdout();
                                         fclose(clientsList);
+                                      }
+                                    else
+                                      {
+                                        if(!strcmp(command, "ADD_ROOM"))
+                                          {
+                                            if(IsCommandCorrect(message, 3))
+                                              {
+                                                SendRequest(socketFileDescriptor, message,  "---\nYou have just created the Common Room.\n");
+                                                printf(">~ You can use #Help# to get more specific information.\n");
+                                                str_overwrite_stdout();
+                                              }
+                                            else
+                                            {
+                                                printf("\b~ Invalid syntax. Unable to create a Common Room.\n");
+                                                printf(">~ Correct syntax: #ADD_ROOM#roomname#\n");
+                                                str_overwrite_stdout();
+                                            }
+                                          }
+                                        else
+                                          {
+                                            if(!strcmp(command, "GO_TO_ROOM"))
+                                              {
+
+                                                if(IsCommandCorrect(message, 3))
+                                                  {
+                                                    SendRequest(socketFileDescriptor, message,  "You have moved to the Common Room.\n");
+                                                    printf(">~ You can use #Help# to get more relevant information.\n");
+                                                    str_overwrite_stdout();
+                                                  }
+                                                else
+                                                {
+                                                    printf("\b~ Invalid syntax. Unable to Move to the Common Room.\n");
+                                                    printf(">~ Correct syntax: #GO_TO_ROOM#roomname#\n");
+                                                    str_overwrite_stdout();
+                                                }
+                                              }
+                                            else
+                                              {
+                                                if(!strcmp(command, "INVITE_CLIENT"))
+                                                  {
+
+                                                    if(IsCommandCorrect(message, 3))
+                                                      {
+                                                        SendRequest(socketFileDescriptor, message,  "You've just invited new Client.");
+                                                        str_overwrite_stdout();
+                                                      }
+                                                    else
+                                                    {
+                                                        printf("\b~ Invalid syntax. Unable to Create New Account.\n");
+                                                        printf(">~ Correct syntax: #INVITE_CLIENT#fullname#password#\n");
+                                                        str_overwrite_stdout();
+                                                    }
+                                                  }
+                                              }
+                                          }
                                       }
 
 
@@ -321,8 +380,8 @@ int CommandAnalyzer(char* name, char* message, int socketFileDescriptor)
     }
   else
     {
-      //if(!IsCommand(message))
-      send(socketFileDescriptor, message, strlen(message), 0);
+      sprintf(buffer, "%s\n", message);
+      send(socketFileDescriptor, buffer, strlen(buffer), 0);
       //printf("Message sent.\n");
       //fflush(stdout);
     }
