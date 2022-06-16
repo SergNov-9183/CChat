@@ -31,28 +31,22 @@ jobs:
         run: sudo apt install aptitude -y
       - name: Install QT
         run: sudo aptitude install qt5-qmake -y
-        
-      - name: cd server
-        run: cd server/
+
       - name: Show server
+        working-directory: ./server
         run: ls
       - name: Run qmake build
+        working-directory: ./server
         run: qmake -makefile -qtconf "server.pro"
-      - name: Show server
-        run: ls
-      - name: cd ..
-        run: cd ../
+
       
-      - name: cd client
-        run: cd client/
+
       - name: Show client
+        working-directory: ./client
         run: ls
       - name: Run qmake build
+        working-directory: ./client
         run: qmake -makefile -qtconf "client.pro"
-      - name: Show client
-        run: ls
-      - name: cd ..
-        run: cd ../
         
       # - name: Build
       #   run: g++ hello.cpp -o ${{ env.app_name }}
