@@ -30,7 +30,7 @@ jobs:
       - name: Install aptitude
         run: sudo apt install aptitude -y
       - name: Install QT
-        run: sudo aptitude install qt5-qmake
+        run: sudo aptitude install qt5-qmake -y
         
       # - name: Build
       #   run: g++ hello.cpp -o ${{ env.app_name }}
