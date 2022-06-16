@@ -32,21 +32,24 @@ jobs:
       - name: Install QT
         run: sudo aptitude install qt5-qmake -y
 
-      - name: Show server
-        working-directory: ./server
-        run: ls
       - name: Run qmake build
-        working-directory: ./server
-        run: qmake -makefile -qtconf "server.pro"
+        run: qmake -makefile -qtconf "CChat.pro"
+      
+#       - name: Show server
+#         working-directory: ./server
+#         run: ls
+#       - name: Run qmake build
+#         working-directory: ./server
+#         run: qmake -makefile -qtconf "server.pro"
 
       
 
-      - name: Show client
-        working-directory: ./client
-        run: ls
-      - name: Run qmake build
-        working-directory: ./client
-        run: qmake -makefile -qtconf "client.pro"
+#       - name: Show client
+#         working-directory: ./client
+#         run: ls
+#       - name: Run qmake build
+#         working-directory: ./client
+#         run: qmake -makefile -qtconf "client.pro"
         
       # - name: Build
       #   run: g++ hello.cpp -o ${{ env.app_name }}
@@ -56,21 +59,6 @@ jobs:
       #     name: my-artifact-matrix
       #     path: ${{ env.app_name }}*
       #     retention-days: 5 
-
-
-#   build_windows:
-#     runs-on: windows-latest
-#     steps:
-#       - uses: actions/checkout@v3
-#       - name: Build
-#         run cl
-#         # run: g++ hello.cpp -o ${{ env.app_name }}_${{ runner.os }}   
-#       - name: 'Upload Artifact'
-#         uses: actions/upload-artifact@v3
-#         with: 
-#           name: my-artifact
-#           path: ${{ env.app_name }}_${{ runner.os }}
-#           retention-days: 5 
 
           
           
