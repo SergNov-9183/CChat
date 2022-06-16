@@ -30,7 +30,7 @@ jobs:
       - name: Install aptitude
         run: sudo apt install aptitude -y
       - name: Install QT
-        run: sudo aptitude install qt5-qmake -y
+        run: sudo aptitude install qt5-default -y
 
       - name: Run qmake build
         run: qmake -makefile -qtconf "CChat.pro"
