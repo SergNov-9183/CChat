@@ -37,24 +37,24 @@ jobs:
       - name: Install C++
         run: sudo apt -y install build-essential
 
+#       - name: Run qmake build
+#         run: qmake -makefile -qtconf "CChat.pro"
+      
+      - name: Show server
+        working-directory: ./server
+        run: ls
       - name: Run qmake build
-        run: qmake -makefile -qtconf "CChat.pro"
-      
-#       - name: Show server
-#         working-directory: ./server
-#         run: ls
-#       - name: Run qmake build
-#         working-directory: ./server
-#         run: qmake -makefile -qtconf "server.pro"
+        working-directory: ./server
+        run: qmake -makefile -qtconf "server.pro"
 
       
 
-#       - name: Show client
-#         working-directory: ./client
-#         run: ls
-#       - name: Run qmake build
-#         working-directory: ./client
-#         run: qmake -makefile -qtconf "client.pro"
+      - name: Show client
+        working-directory: ./client
+        run: ls
+      - name: Run qmake build
+        working-directory: ./client
+        run: qmake -makefile -qtconf "client.pro"
         
       # - name: Build
       #   run: g++ hello.cpp -o ${{ env.app_name }}
