@@ -13,12 +13,11 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-
 jobs:
   build_matrix:
     strategy:
       matrix:
-        os: [ubuntu-20.04]
+        os: [vookimedlo/ubuntu-clang:clang_bionic]
         
     runs-on: ${{ matrix.os }}
     env:
@@ -30,10 +29,15 @@ jobs:
       - name: Show pwd
         run: pwd
         
-      - name: Install aptitude
-        run: sudo apt install aptitude -y
+#       - name: Install aptitude
+#         run: sudo apt install aptitude -y
+#       - name: Install QT
+#         run: sudo aptitude install qt5-qmake -y
+      - name: Update apt-get
+        run: sudo apt-get update -qq
+        
       - name: Install QT
-        run: sudo aptitude install qt5-qmake -y
+        run: apt-get -y install qt5-default qt5-image-formats-plugins
 
 #       - name: Run qmake build
 #         run: qmake -makefile -qtconf "CChat.pro"
