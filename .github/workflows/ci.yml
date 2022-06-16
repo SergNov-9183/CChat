@@ -29,10 +29,13 @@ jobs:
         run: ls
       - name: Show pwd
         run: pwd
+        
       - name: Install aptitude
         run: sudo apt install aptitude -y
       - name: Install QT
         run: sudo aptitude install qt5-default -y
+      - name: Install C++
+        run: sudo apt -y install build-essential
 
       - name: Run qmake build
         run: qmake -makefile -qtconf "CChat.pro"
