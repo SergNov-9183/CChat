@@ -28,7 +28,7 @@ jobs:
       - name: Show folder
         run: ls
       - name: Install QT
-        run: apt install qt-sdk
+        run: aptitude install qt-sdk
       # - name: Build
       #   run: g++ hello.cpp -o ${{ env.app_name }}
       # - name: 'Upload Artifact'
