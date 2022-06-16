@@ -33,7 +33,7 @@ jobs:
         run: sudo aptitude install qt5-qmake -y
         
       - name: cd server
-        run: cd server
+        run: cd server/
       - name: Show server
         run: ls
       - name: Run qmake build
@@ -41,10 +41,10 @@ jobs:
       - name: Show server
         run: ls
       - name: cd ..
-        run: cd ..
+        run: cd ../
       
       - name: cd client
-        run: cd client
+        run: cd client/
       - name: Show client
         run: ls
       - name: Run qmake build
@@ -52,7 +52,7 @@ jobs:
       - name: Show client
         run: ls
       - name: cd ..
-        run: cd ..
+        run: cd ../
         
       # - name: Build
       #   run: g++ hello.cpp -o ${{ env.app_name }}
