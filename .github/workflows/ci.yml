@@ -28,7 +28,7 @@ jobs:
       - name: Show folder
         run: ls
       - name: Install aptitude
-        run: apt install aptitude
+        run: apt-get install aptitude
       - name: Install QT
         run: aptitude install qt-sdk
         
