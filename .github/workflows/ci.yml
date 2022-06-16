@@ -37,7 +37,7 @@ jobs:
         run: sudo apt-get update -qq
         
       - name: Install QT
-        run: apt-get -y install qt5-default qt5-image-formats-plugins
+        run: sudo apt-get -y install qt5-default qt5-image-formats-plugins
 
 #       - name: Run qmake build
 #         run: qmake -makefile -qtconf "CChat.pro"
