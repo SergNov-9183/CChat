@@ -33,7 +33,7 @@ jobs:
       - name: Install aptitude
         run: sudo apt install aptitude -y
       - name: Install QT
-        run: sudo aptitude install qt4-make -y
+        run: sudo aptitude install qt5-make -y
       - name: Install C++
         run: sudo apt -y install build-essential
 
