@@ -34,8 +34,6 @@ jobs:
         run: sudo apt install aptitude -y
       - name: Install QT
         run: sudo aptitude install qt5-qmake -y
-      - name: Install C++
-        run: sudo apt -y install build-essential
 
 #       - name: Run qmake build
 #         run: qmake -makefile -qtconf "CChat.pro"
@@ -45,7 +43,7 @@ jobs:
         run: ls
       - name: Run qmake build
         working-directory: ./server
-        run: qmake -makefile -qtconf "server.pro"
+        run: qmake -makefile
 
       
 
@@ -54,7 +52,7 @@ jobs:
         run: ls
       - name: Run qmake build
         working-directory: ./client
-        run: qmake -makefile -qtconf "client.pro"
+        run: qmake -makefile
         
       # - name: Build
       #   run: g++ hello.cpp -o ${{ env.app_name }}
