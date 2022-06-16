@@ -17,7 +17,7 @@ jobs:
   build_matrix:
     strategy:
       matrix:
-        os: [vookimedlo/ubuntu-clang:clang_bionic]
+        os: [ubuntu:20.04]
         
     runs-on: ${{ matrix.os }}
     env:
