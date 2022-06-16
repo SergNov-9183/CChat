@@ -26,11 +26,13 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Show folder
-        run: ls
+        run: ls && pwd
       - name: Install aptitude
         run: sudo apt install aptitude -y
       - name: Install QT
         run: sudo aptitude install qt5-qmake -y
+      # - name: Run Makefile build
+      #   run: qmake -makefile -qtconf "server"
         
       # - name: Build
       #   run: g++ hello.cpp -o ${{ env.app_name }}
