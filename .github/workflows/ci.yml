@@ -1,0 +1,62 @@
+# This is a basic workflow to help you get started with Actions
+
+name: CI
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the "main" branch
+  push:
+    branches: [ "main", "actions" ]
+  pull_request:
+    branches: [ "main", "development" ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+
+jobs:
+  build_matrix:
+    strategy:
+      matrix:
+        os: [ubuntu-20.04]
+        
+    runs-on: ${{ matrix.os }}
+    env:
+      app_name: app_${{ matrix.os }}_${{ github.run_number }}
+    steps:
+      - uses: actions/checkout@v3
+      # - name: Install QT
+      #   run: apt install qt-sdk
+      - name: Show folder
+        run: ls
+      # - name: Build
+      #   run: g++ hello.cpp -o ${{ env.app_name }}
+      # - name: 'Upload Artifact'
+      #   uses: actions/upload-artifact@v3
+      #   with: 
+      #     name: my-artifact-matrix
+      #     path: ${{ env.app_name }}*
+      #     retention-days: 5 
+
+
+#   build_windows:
+#     runs-on: windows-latest
+#     steps:
+#       - uses: actions/checkout@v3
+#       - name: Build
+#         run cl
+#         # run: g++ hello.cpp -o ${{ env.app_name }}_${{ runner.os }}   
+#       - name: 'Upload Artifact'
+#         uses: actions/upload-artifact@v3
+#         with: 
+#           name: my-artifact
+#           path: ${{ env.app_name }}_${{ runner.os }}
+#           retention-days: 5 
+
+          
+          
+      
+    
+        
+        
+        
