@@ -28,7 +28,7 @@ jobs:
       - name: Show folder
         run: ls
       - name: Show pwd
-        run: echo "$PATH"
+        run: echo "$GITHUB_WORKSPACE"
         
       - name: Update apt-get
         run: sudo apt-get update -qq
