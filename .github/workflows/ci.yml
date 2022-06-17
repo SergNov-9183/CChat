@@ -13,6 +13,9 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
+env:
+  app_name: app_${{ matrix.os }}_${{ github.run_number }}
+
 jobs:
   build_matrix:
     strategy:
@@ -20,8 +23,7 @@ jobs:
         os: [ubuntu-20.04]
         
     runs-on: ${{ matrix.os }}
-    env:
-      app_name: app_${{ matrix.os }}_${{ github.run_number }}
+
     steps:
       - uses: actions/checkout@v3
       
@@ -78,7 +80,8 @@ jobs:
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
           token: ${{ secrets.TELEGRAM_TOKEN }}
           message: |
-            An event (${{ github.event_name }}) occured in ${{ github.repository }}. 
+            An event occured in ${{ github.repository }} repository.
+            ${{ github.event_name }}
           document: ${{ env.app_name }}_${{ runner.os }}
  
           
