@@ -1,6 +1,6 @@
 # This is a basic workflow to help you get started with Actions
 
-name: CI 
+name: CI
 
 # Controls when the workflow will run
 on:
@@ -24,23 +24,6 @@ jobs:
       app_name: app_${{ matrix.os }}_${{ github.run_number }}
     steps:
       - uses: actions/checkout@v3
-      
-      - name: Upload Artefact
-        uses: actions/upload-artefact@v3
-        with:
-          name: my-artefact
-          path: ${{ env.app_name }}_${{ runner.os }}
-          retention_days: 10
-          
-      - name: Telegram Notify
-        uses: appleboy/telegram-action@master
-        with:
-          to: ${{ secrets.TELEGRAM_CHAT_ID }}
-          token: ${{ secrets.TELEGRAM_TOKEN }}
-          message: |
-            An event (${{ github.event_name }}) occured in ${{ github.repository }}.
-          document: ${{ env.app_name }}_${{ runner.os }}
-          
       
       - name: Show folder
         run: ls
@@ -95,14 +78,7 @@ jobs:
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
           token: ${{ secrets.TELEGRAM_TOKEN }}
           message: |
-            An event occured in ${{ github.repository }} repository.
-            ${{ github.event_name }}
+            An event (${{ github.event_name }}) occured in ${{ github.repository }}. 
           document: ${{ env.app_name }}_${{ runner.os }}
  
           
-          
-      
-    
-        
-        
-        
