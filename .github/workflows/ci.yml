@@ -45,6 +45,9 @@ jobs:
       - name: Run make
         working-directory: ./server
         run: make
+      - name: Show server
+        working-directory: ./server
+        run: ls
       
 
       - name: Show client
@@ -56,15 +59,18 @@ jobs:
       - name: Run make
         working-directory: ./client
         run: make
-        
-      # - name: Build
-      #   run: g++ hello.cpp -o ${{ env.app_name }}
-      # - name: 'Upload Artifact'
-      #   uses: actions/upload-artifact@v3
-      #   with: 
-      #     name: my-artifact-matrix
-      #     path: ${{ env.app_name }}*
-      #     retention-days: 5 
+      - name: Show client
+        working-directory: ./client
+        run: ls
+
+      - name: 'Upload Artifact'
+        uses: actions/upload-artifact@v3
+        with: 
+          name: my-artifact-matrix
+          path: | 
+            server/server
+            client/client
+          retention-days: 5 
 
           
           
