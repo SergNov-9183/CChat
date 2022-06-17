@@ -44,7 +44,7 @@ jobs:
         run: qmake -makefile
       - name: Run make
         working-directory: ./server
-        run: make
+        run: make -o "run_server"
       - name: Show server
         working-directory: ./server
         run: ls
@@ -58,7 +58,7 @@ jobs:
         run: qmake -makefile
       - name: Run make
         working-directory: ./client
-        run: make
+        run: make -o "run_client"
       - name: Show client
         working-directory: ./client
         run: ls
