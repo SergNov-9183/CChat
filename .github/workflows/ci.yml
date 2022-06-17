@@ -84,7 +84,7 @@ jobs:
               An event (*${{ github.event_name }}*) occured in [${{ github.repository }}](https://github.com/SergNov-9183/CChat) repository
               Job status: *${{ job.status }}*
               if: on==push:
-                Branch: ${{ github.branch }}
+                Branch: ${GITHUB_REF##*/}
           format: markdown
           document: ${{ env.bin_path }}/*
         
