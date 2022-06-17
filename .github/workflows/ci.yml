@@ -44,7 +44,7 @@ jobs:
         run: qmake -makefile "DESTDIR=$GITHUB_WORKSPACE"
       - name: Run make
         working-directory: ./server
-        run: make -o "run_server"
+        run: make
       - name: Show server
         working-directory: ./server
         run: ls
@@ -58,7 +58,7 @@ jobs:
         run: qmake -makefile "DESTDIR=$GITHUB_WORKSPACE"
       - name: Run make
         working-directory: ./client
-        run: make -o "run_client"
+        run: make
       - name: Show client
         working-directory: ./client
         run: ls
