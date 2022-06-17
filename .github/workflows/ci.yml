@@ -58,9 +58,7 @@ jobs:
         run: ls
       - name: Show above server
         run: ls
-      - name: Show bin_path
-        working-directory: ${{ env.bin_path }}
-        run: ls
+
       - name: Show . bin
         working-directory: ./bin
         run: ls
