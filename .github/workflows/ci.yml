@@ -28,7 +28,7 @@ jobs:
       - name: Show folder
         run: ls
       - name: Show pwd
-        run: pwd
+        run: echo "$PATH"
         
       - name: Update apt-get
         run: sudo apt-get update -qq
