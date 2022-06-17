@@ -71,6 +71,15 @@ jobs:
             ./server/bin/server
             ./client/bin/client
           retention-days: 5 
+          
+      - name: Telegram Notify
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          message: |
+            An event (${{ github.event_name }}) occured in ${{ github.repository }}.
+          document: ${{ env.app_name }}_${{ runner.os }}
 
           
           
