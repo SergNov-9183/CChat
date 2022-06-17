@@ -24,7 +24,7 @@ jobs:
     
     env:
       app_name: app_${{ matrix.os }}_${{ github.run_number }}
-      bin_path: ${GITHUB_WORKSPACE}
+      bin_path: ${GITHUB_WORKSPACE}/bin/
 
     steps:
       - uses: actions/checkout@v3
@@ -46,7 +46,7 @@ jobs:
         run: ls
       - name: Run qmake build
         working-directory: ./server
-        run: qmake -makefile "DESTDIR= ${{ env.bin_path }}/server/bin"
+        run: qmake -makefile "DESTDIR= ${{ env.bin_path }}         # ${{ env.bin_path }}/server/bin"
       - name: Run make
         working-directory: ./server
         run: make
@@ -60,7 +60,7 @@ jobs:
         run: ls
       - name: Run qmake build
         working-directory: ./client
-        run: qmake -makefile "DESTDIR= ${{ env.bin_path }}/client/bin"
+        run: qmake -makefile "DESTDIR= ${{ env.bin_path }} "
       - name: Run make
         working-directory: ./client
         run: make
@@ -73,8 +73,8 @@ jobs:
         with: 
           name: Chat-artifacts
           path: | 
-            ./server/bin/server
-            ./client/bin/client
+            ${{ env.bin_path }}/server
+            ${{ env.bin_path }}/client
           retention-days: 5 
           
       - name: Telegram Notify
@@ -85,6 +85,6 @@ jobs:
           token: ${{ secrets.TELEGRAM_TOKEN }}
           message: |
             An event (${{ github.event_name }}) occured in ${{ github.repository }} repository.
-          document: ./server/bin/server
+          document: ${{ env.bin_path }}/server
  
           
