@@ -44,6 +44,11 @@ jobs:
       - name: Show server
         working-directory: ./server
         run: ls
+      - name: Show above server
+        run: ls
+      - name: Show bin
+        working-directory: ./bin
+        run: ls
       - name: Run qmake build
         working-directory: ./server
         run: qmake -makefile "DESTDIR= ${{ env.bin_path }}"         # ${{ env.bin_path }}/server/bin"
