@@ -28,7 +28,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - run: echo $bin_path 
+      - run: echo ${{ $bin_path }} 
       
       - name: Show folder
         run: ls
