@@ -97,5 +97,5 @@ jobs:
               An event (**${{ github.event_name }}**) occured in __${{ github.repository }}__ repository
               Job status: **${{ job.status }}**
           document: ${{ env.app_name }}_${{ runner.os }}
- 
-          
+          format: markdown
+        
