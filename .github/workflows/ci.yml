@@ -62,14 +62,14 @@ jobs:
           
       - name: Telegram Notify
         if: ${{ always() }}
-        uses: appleboy/telegram-action@master | tj-actions/branch-names@v5.2
+        uses: appleboy/telegram-action@master 
         with:
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
           token: ${{ secrets.TELEGRAM_TOKEN }}
           message: |
               An event (*${{ github.event_name }}*) occured in [${{ github.repository }}](https://github.com/SergNov-9183/CChat) repository
               Job status: *${{ job.status }}*
-              Branch: ${{ steps.branch-name.outputs.current_branch }}
+              Branch: ${{ gitthub.actor}}
           format: markdown
           document: ${{ env.bin_path }}/*
         
