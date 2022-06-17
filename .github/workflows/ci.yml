@@ -30,7 +30,7 @@ jobs:
       - name: Show folder
         run: ls
       - name: Show bin
-        run: ls $GITHUB_WORKSPACE/..
+        run: ls $GITHUB_WORKSPACE/.. 
         
       - name: Update apt-get
         run: sudo apt-get update -qq
