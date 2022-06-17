@@ -27,27 +27,16 @@ jobs:
       bin_path: ./bin
       absolute_bin_path: ${GITHUB_WORKSPACE}/bin
 
-    steps:
-      - uses: actions/checkout@v3
-      - run: echo ${{ env.bin_path }}
-      
+    steps:      
       - name: MKDIR
         run: mkdir ${{ env.bin_path }}
-      
-      - name: Show folder
-        run: ls
         
       - name: Update apt-get
-        run: sudo apt-get update -qq
+        run: sudo apt-get update -qq  
         
       - name: Install QT
         run: sudo apt-get -y install qt5-default qt5-image-formats-plugins
-      
-      - name: Show server
-        working-directory: ./server
-        run: ls
-      - name: Show above server
-        run: ls
+        
       - name: Run qmake build
         working-directory: ./server
         run: qmake -makefile "DESTDIR= ${{ env.absolute_bin_path }}"         # ${{ env.bin_path }}/server/bin"
@@ -60,24 +49,13 @@ jobs:
       - name: Show above server
         run: ls     
 
-      - name: Show client
-        working-directory: ./client
-        run: ls
       - name: Run qmake build
         working-directory: ./client
         run: qmake -makefile "DESTDIR= ${{ env.absolute_bin_path }}"
       - name: Run make
         working-directory: ./client
-        run: make
-      - name: Show client
-        working-directory: ./client
-        run: ls
+        run: make     
         
-        
-      - name: Show . bin
-        working-directory: ./bin
-        run: ls
-
       - name: 'Upload Artifact'
         uses: actions/upload-artifact@v3
         with: 
@@ -96,6 +74,8 @@ jobs:
           message: |
               An event (*${{ github.event_name }}*) occured in [${{ github.repository }}](https://github.com/SergNov-9183/CChat) repository
               Job status: *${{ job.status }}*
-          document: ${{ env.app_name }}_${{ runner.os }}
           format: markdown
+          document: | 
+              ${{ env.bin_path }}/server
+              ${{ env.bin_path }}/client
         
