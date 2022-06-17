@@ -76,13 +76,13 @@ jobs:
           retention-days: 5 
           
       - name: Telegram Notify
+        if: ${{ always() }}
         uses: appleboy/telegram-action@master
         with:
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
           token: ${{ secrets.TELEGRAM_TOKEN }}
           message: |
-            An event occured in ${{ github.repository }} repository.
-            ${{ github.event_name }}
+            An event (${{ github.event_name }}) occured in ${{ github.repository }} repository.
           document: |
             ./server/bin/server
             ./client/bin/client
