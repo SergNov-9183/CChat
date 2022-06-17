@@ -41,7 +41,7 @@ jobs:
         run: ls
       - name: Run qmake build
         working-directory: ./server
-        run: qmake -makefile "DESTDIR=../"
+        run: qmake -makefile "DESTDIR=./bin"
       - name: Run make
         working-directory: ./server
         run: make
@@ -55,7 +55,7 @@ jobs:
         run: ls
       - name: Run qmake build
         working-directory: ./client
-        run: qmake -makefile "DESTDIR=../"
+        run: qmake -makefile "DESTDIR=./bin"
       - name: Run make
         working-directory: ./client
         run: make
@@ -68,8 +68,8 @@ jobs:
         with: 
           name: Chat-artifacts
           path: | 
-            server
-            client
+            ./server/bin/server
+            ./client/bin/client
           retention-days: 5 
 
           
