@@ -24,7 +24,7 @@ jobs:
     
     env:
       app_name: app_${{ matrix.os }}_${{ github.run_number }}
-      bin_path: ${GITHUB_WORKSPACE}/bin/
+      bin_path: ${GITHUB_WORKSPACE}/bin
 
     steps:
       - uses: actions/checkout@v3
