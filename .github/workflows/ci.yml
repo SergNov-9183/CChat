@@ -28,7 +28,7 @@ jobs:
       - name: Show folder
         run: ls
       - name: Show bin
-        run: ls $GITHUB_WORKSPACE
+        run: ls $GITHUB_WORKSPACE/..
         
       - name: Update apt-get
         run: sudo apt-get update -qq
@@ -41,7 +41,7 @@ jobs:
         run: ls
       - name: Run qmake build
         working-directory: ./server
-        run: qmake -makefile "DESTDIR=$GITHUB_WORKSPACE/bin/"
+        run: qmake -makefile "DESTDIR=/bin/"
       - name: Run make
         working-directory: ./server
         run: make -o "run_server"
