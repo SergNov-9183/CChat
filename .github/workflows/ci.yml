@@ -27,8 +27,8 @@ jobs:
       
       - name: Show folder
         run: ls
-      - name: Show pwd
-        run: echo "$GITHUB_WORKSPACE"
+      - name: Show bin
+        run: ls $GITHUB_WORKSPACE/bin
         
       - name: Update apt-get
         run: sudo apt-get update -qq
