@@ -29,36 +29,22 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - run: echo ${{ env.bin_path }}
       
       - name: MKDIR
         run: mkdir ${{ env.bin_path }}
-      
-      - name: Show folder
-        run: ls
         
       - name: Update apt-get
         run: sudo apt-get update -qq
         
       - name: Install QT
         run: sudo apt-get -y install qt5-default qt5-image-formats-plugins
-      
-      - name: Show server
-        working-directory: ./server
-        run: ls
-      - name: Show above server
-        run: ls
+
       - name: Run qmake build
         working-directory: ./server
         run: qmake -makefile "DESTDIR= ${{ env.absolute_bin_path }}"         # ${{ env.bin_path }}/server/bin"
       - name: Run make
         working-directory: ./server
-        run: make
-      - name: Show server
-        working-directory: ./server
-        run: ls
-      - name: Show above server
-        run: ls      
+        run: make     
 
       - name: Run qmake build
         working-directory: ./client
