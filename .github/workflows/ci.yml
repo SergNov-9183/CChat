@@ -25,6 +25,7 @@ jobs:
     env:
       app_name: app_${{ matrix.os }}_${{ github.run_number }}
       bin_path: ./bin
+      absolute_bin_path: ${GITHUB_WORKSPACE}/bin
 
     steps:
       - uses: actions/checkout@v3
@@ -49,7 +50,7 @@ jobs:
         run: ls
       - name: Run qmake build
         working-directory: ./server
-        run: qmake -makefile "DESTDIR= ${{ env.bin_path }}"         # ${{ env.bin_path }}/server/bin"
+        run: qmake -makefile "DESTDIR= ${{ env.absolute_bin_path }}"         # ${{ env.bin_path }}/server/bin"
       - name: Run make
         working-directory: ./server
         run: make
@@ -64,7 +65,7 @@ jobs:
         run: ls
       - name: Run qmake build
         working-directory: ./client
-        run: qmake -makefile "DESTDIR= ${{ env.bin_path }}"
+        run: qmake -makefile "DESTDIR= ${{ env.absolute_bin_path }}"
       - name: Run make
         working-directory: ./client
         run: make
