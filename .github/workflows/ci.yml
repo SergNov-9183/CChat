@@ -82,7 +82,7 @@ jobs:
         with: 
           name: Chat-artifacts
           path: | 
-            ${{ env.bin_path }}/server
+            ${{ env.bin_path }}/server |
             ${{ env.bin_path }}/client
           retention-days: 5 
           
