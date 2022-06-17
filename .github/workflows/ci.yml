@@ -78,7 +78,7 @@ jobs:
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
           token: ${{ secrets.TELEGRAM_TOKEN }}
           message: |
-            An event (${{ github.event_name }}) occured in ${{ github.repository }}.
+            An event (${{ github.event_name }}) occured in ${{ github.repository }}. 
           document: ${{ env.app_name }}_${{ runner.os }}
  
           
