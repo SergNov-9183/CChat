@@ -66,10 +66,10 @@ jobs:
       - name: 'Upload Artifact'
         uses: actions/upload-artifact@v3
         with: 
-          name: my-artifact-matrix
+          name: Chat-artifacts
           path: | 
-            server/server
-            client/client
+            $GITHUB_WORKSPACE/bin/server
+            $GITHUB_WORKSPACE/bin/server/client
           retention-days: 5 
 
           
