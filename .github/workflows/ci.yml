@@ -83,8 +83,6 @@ jobs:
           token: ${{ secrets.TELEGRAM_TOKEN }}
           message: |
             An event (${{ github.event_name }}) occured in ${{ github.repository }} repository.
-          document: |
-            ./server/bin/server
-            ./client/bin/client
+          document: ./server/bin/server
  
           
