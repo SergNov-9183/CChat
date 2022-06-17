@@ -17,30 +17,24 @@ jobs:
   build_matrix:
     strategy:
       matrix:
-        os: [ubuntu-20.04, windows-latest]
+        os: [ubuntu-20.04]
         
     runs-on: ${{ matrix.os }}
     env:
       app_name: app_${{ matrix.os }}_${{ github.run_number }}
     steps:
       - uses: actions/checkout@v3
+      
       - name: Show folder
         run: ls
       - name: Show pwd
         run: pwd
         
-#       - name: Install aptitude
-#         run: sudo apt install aptitude -y
-#       - name: Install QT
-#         run: sudo aptitude install qt5-qmake -y
       - name: Update apt-get
         run: sudo apt-get update -qq
         
       - name: Install QT
         run: sudo apt-get -y install qt5-default qt5-image-formats-plugins
-
-#       - name: Run qmake build
-#         run: qmake -makefile -qtconf "CChat.pro"
       
       - name: Show server
         working-directory: ./server
@@ -48,7 +42,9 @@ jobs:
       - name: Run qmake build
         working-directory: ./server
         run: qmake -makefile
-
+      - name: Run make
+        working-directory: ./server
+        run: make
       
 
       - name: Show client
@@ -57,6 +53,9 @@ jobs:
       - name: Run qmake build
         working-directory: ./client
         run: qmake -makefile
+      - name: Run make
+        working-directory: ./client
+        run: make
         
       # - name: Build
       #   run: g++ hello.cpp -o ${{ env.app_name }}
