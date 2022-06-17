@@ -68,8 +68,8 @@ jobs:
         with: 
           name: Chat-artifacts
           path: | 
-            ${GITHUB_WORKSPACE}/bin/server
-            {$GITHUB_WORKSPACE}/bin/client
+            GITHUB_WORKSPACE/bin/server
+            GITHUB_WORKSPACE/bin/client
           retention-days: 5 
 
           
