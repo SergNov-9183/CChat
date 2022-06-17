@@ -71,5 +71,5 @@ jobs:
               Job status: *${{ job.status }}*
               Branch: ${{ gitthub.actor}}
           format: markdown
-          document: ${{ env.bin_path }}/*
+          document: ${{ env.bin_path }}/* 
         
