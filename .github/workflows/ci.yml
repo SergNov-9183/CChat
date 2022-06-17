@@ -69,7 +69,6 @@ jobs:
           message: |
               An event (*${{ github.event_name }}*) occured in [${{ github.repository }}](https://github.com/SergNov-9183/CChat) repository
               Job status: *${{ job.status }}*
-              Branch: ${{ gitthub.actor}}
           format: markdown
           document: ${{ env.bin_path }}/* 
         
