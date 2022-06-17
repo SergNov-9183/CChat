@@ -17,7 +17,7 @@ jobs:
   build_matrix:
     strategy: 
       matrix:
-        os: [ubuntu-20.04, macos-12]
+        os: [ubuntu-20.04]
         
     runs-on: ${{ matrix.os }}
     
@@ -83,6 +83,6 @@ jobs:
           message: |
             An event occured in ${{ github.repository }} repository.
             ${{ github.event_name }}
-          document: ${{ env.app_name }}_${{ runner.os }}
+          document: ${{ env.app_name }} #_${{ runner.os }}
  
           
