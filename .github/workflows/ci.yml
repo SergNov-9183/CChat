@@ -60,19 +60,8 @@ jobs:
           path: ${{ env.bin_path }}
           retention-days: 5 
           
-      - name: Telegram Notify
-        if: ${{ always() }}
-        uses: appleboy/telegram-action@master 
-        with:
-          to: ${{ secrets.TELEGRAM_CHAT_ID }}
-          token: ${{ secrets.TELEGRAM_TOKEN }}
-          message: |
-              An event (*${{ github.event_name }}*) occured in [${{ github.repository }}](https://github.com/SergNov-9183/CChat) repository
-              Job status: *${{ job.status }}*
-          format: markdown
-          document: ${{ env.bin_path }}/*
         
-  which_branch:
+  Notify_Telegram:
     strategy: 
       matrix:
         os: [ubuntu-20.04]
@@ -86,18 +75,14 @@ jobs:
       absolute_bin_path: ${GITHUB_WORKSPACE}/bin
       
     steps:
-      # extract branch name
-      - name: Extract branch name
-        if: github.event_name != 'pull_request'
-        shell: bash
-        run: echo "::set-env name=BRANCH_NAME::$(echo ${GITHUB_REF#refs/heads/})"
-        id: extract_branch
-
-      # extract branch name on pull request
-      - name: Print branch name
-        if: github.event_name == 'pull_request'
-        run: echo "::set-env name=BRANCH_NAME::$(echo ${GITHUB_HEAD_REF})"
-
-      # print branch name
-      - name: Get branch name
-        run: echo 'The branch name is' $BRANCH_NAME
+      - name: Telegram Notify
+        if: ${{ always() }}
+        uses: appleboy/telegram-action@master 
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          message: |
+              An event (*${{ github.event_name }}*) occured in [${{ github.repository }}](https://github.com/SergNov-9183/CChat) repository
+              Job status: *${{ job.status }}*
+          format: markdown
+          document: ${{ env.bin_path }}/*
