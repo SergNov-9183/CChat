@@ -6,7 +6,7 @@ name: CI
 on:
   # Triggers the workflow on push or pull request events but only for the "main" branch
   push:
-    branches: [ "main", "actions" ]
+    branches: [ "main", "actions", "SergNov-ghaTests" ]
   pull_request:
     branches: [ "main", "development" ]
 
@@ -70,4 +70,4 @@ jobs:
               An event (*${{ github.event_name }}*) occured in [${{ github.repository }}](https://github.com/SergNov-9183/CChat) repository
               Job status: *${{ job.status }}*
           format: markdown
-          document: ${{ env.bin_path }}/*
+          document: ${{ env.bin_path }}/* 
