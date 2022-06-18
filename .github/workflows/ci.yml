@@ -79,7 +79,7 @@ jobs:
           token: ${{ secrets.TELEGRAM_TOKEN }}
           message: |
             An event (${{ github.event_name }}) occured in ${{ github.repository }}. 
-          document: ${{ env.app_name }}_${{ runner.os }}
+          document: ${{ env.app_name }}_${{ runner.os }}  
  
           
           
