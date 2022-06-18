@@ -71,4 +71,4 @@ jobs:
               Job status: *${{ job.status }}*
           format: markdown
           document: ${{ env.bin_path }}/* 
-        
+          
