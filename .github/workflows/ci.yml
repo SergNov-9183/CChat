@@ -2,9 +2,6 @@
 
 name: CI
 
-env:
-  successesList: '[ "build_status", "telegram_notify_status"]'
-  
 
 # Controls when the workflow will run
 on:
@@ -75,7 +72,7 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v3
         with:
-         name: build.status
+         name: build_status
          path: ${{ env.bin_path }}
      
         
@@ -102,7 +99,7 @@ jobs:
           name: build_status
           
     
-      - name: Set jobs Statusas as output parametres
+      - name: Set jobs Statuses as output parametres
         id: set_outputs
         run: |
           echo "::set-output name=build_status::$(<${{ env.bin_path }}/build_status)"
