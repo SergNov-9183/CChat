@@ -73,6 +73,7 @@ jobs:
       app_name: app_${{ matrix.os }}_${{ github.run_number }}
       bin_path: ./bin
       absolute_bin_path: ${GITHUB_WORKSPACE}/bin
+      status: ${{ job.status}}
       
     steps:
       - name: Telegram Notify
@@ -85,6 +86,7 @@ jobs:
               An event (*${{ github.event_name }}*) occured in [${{ github.repository }}](https://github.com/SergNov-9183/CChat) repository by *${{ github.actor }}*
               Commit message: *${{ github.event.commits[0].message }}*
               Overall job status: *${{ job.status }}*
+              ${{ github.workflow }}: *${{ job.status }}*
               For more information: *https://github.com/${{ github.repository }}/commit/${{ github.sha }}*
           format: markdown
           document: ${{ env.bin_path }}/*          
