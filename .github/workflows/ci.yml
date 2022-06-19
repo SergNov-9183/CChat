@@ -2,6 +2,10 @@
 
 name: CI
 
+env:
+  successesList: '[ "build_status", "telegram_notify_status"]'
+  
+
 # Controls when the workflow will run
 on:
   # Triggers the workflow on push or pull request events but only for the "main" branch
@@ -54,11 +58,15 @@ jobs:
         run: make     
         
       - name: 'Upload Artifact'
+        
+        env:
+         status: ${{ job.status }}
         uses: actions/upload-artifact@v3
         with: 
           name: Chat-artifacts
           path: ${{ env.bin_path }}
           retention-days: 5 
+        
           
         
   Notify_telegram:
