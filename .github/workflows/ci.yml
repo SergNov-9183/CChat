@@ -106,8 +106,9 @@ jobs:
       - name: 'Download Artifact'
         uses: actions/download-artifact@v3
         with: 
-          name: my-artefact
-          path: my-artefact
+          name: Chat-artifacts
+          path: ${{ env.bin_path }}
+          retention-days: 5 
           
           
       - name: MS_Teams Notify
