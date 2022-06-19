@@ -65,7 +65,7 @@ jobs:
     strategy: 
       matrix:
         os: [ubuntu-20.04]
-    needs: [ build_matrix, notify_ms_teams ]
+    needs: build_matrix
     runs-on: ${{ matrix.os }}
     
     
@@ -85,7 +85,6 @@ jobs:
               An event (*${{ github.event_name }}*) occured in [${{ github.repository }}](https://github.com/SergNov-9183/CChat) repository by *${{ github.actor }}*
               Commit message: *${{ github.event.commits[0].message }}*
               Overall job status: *${{ job.status }}*
-              test ${{ job.build_matrix.status }}
               For more information: *https://github.com/${{ github.repository }}/commit/${{ github.sha }}*
           format: markdown
           document: ${{ env.bin_path }}/*          
