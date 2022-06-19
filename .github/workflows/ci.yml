@@ -60,6 +60,15 @@ jobs:
       - name: print bin
         run: ls
         
+        
+          
+      - name: Creating status file
+        env:
+          status: ${{ job.status }}
+        if: ${{ always() }}
+        run: |
+          echo ${{ job.status }} > ./build_status.txt
+        
       - name: 'Upload Artifact'
         uses: actions/upload-artifact@v3
         with: 
@@ -68,21 +77,16 @@ jobs:
             ${{ env.bin_path }}
             ./server
             ./client
+            ./build_status.txt
           retention-days: 5 
+
           
-      - name: Creating status file
-        env:
-          status: ${{ job.status }}
-        if: ${{ always() }}
-        run: |
-          echo ${{ job.status }} > ./build_status.txt
-          
-      - name : Upload status file
-        if: ${{ always() }}
-        uses: actions/upload-artifact@v3
-        with:
-         name: build_status.txt
-         path: ./build_status.txt
+#       - name : Upload status file
+#         if: ${{ always() }}
+#         uses: actions/upload-artifact@v3
+#         with:
+#          name: build_status.txt
+#          path: ./build_status.txt
 
       - name: pwd
         run: pwd
@@ -108,17 +112,22 @@ jobs:
       
     steps:
       - uses: actions/checkout@v3
+
+      - name: Get build status
+        uses: actions/download-artifact@v3
+        with:
+          # name: build_status.txt
+          name: | 
+            ${{ env.bin_path }}
+            ./server
+            ./client
+            build_status.txt
+
       - name: pwd
         run: pwd
         
       - name: print bin
-        run: ls
-    
-      - name: Get build status
-        uses: actions/download-artifact@v3
-        with:
-          name: build_status.txt
-          
+        run: ls         
     
       - name: Set jobs Statuses as output parametres
         id: set_outputs
