@@ -73,7 +73,7 @@ jobs:
           
       - name : Upload status file
         if: ${{ always() }}
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v3
         with:
          name: build.status
          path: ${{ env.bin_path }}
@@ -97,7 +97,7 @@ jobs:
     steps:
     
       - name: Get build status
-        uses: actions/download-artifact@v1
+        uses: actions/download-artifact@v3
         with:
           name: build_status
           
@@ -105,7 +105,7 @@ jobs:
       - name: Set jobs Statusas as output parametres
         id: set_outputs
         run: |
-          echo "::set-output name=build_status::$(<build_status/build_status.txt)"
+          echo "::set-output name=build_status::$(<${{ env.bin_path }}/build_status)"
     
       - name: Telegram Notify
         if: ${{ always() }}
