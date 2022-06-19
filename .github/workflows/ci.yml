@@ -73,7 +73,7 @@ jobs:
       app_name: app_${{ matrix.os }}_${{ github.run_number }}
       bin_path: ./bin
       absolute_bin_path: ${GITHUB_WORKSPACE}/bin
-      status: ${{ job.status}}
+      status: ${{ job.status }}
       
     steps:
       - name: Telegram Notify
