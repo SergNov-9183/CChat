@@ -103,6 +103,10 @@ jobs:
         id: set_outputs
         run: |
           echo "::set-output name=build_status::$(<./build_status.txt)"
+          
+      - name: print bin
+        working-directory: ./bin
+        run: ls
     
       - name: Telegram Notify
         if: ${{ always() }}
@@ -118,7 +122,7 @@ jobs:
               Each job status:
               Job build_matrix: *${{ steps.set_outputs.outputs.build_status }}*
               Job Notify Telegram: *${{ job.status }}*
-              For more information: [*Link to current commit*] (https://github.com/${{ github.repository }}/commit/${{ github.sha }})
+              For more information: [*Link to current commit*](https://github.com/${{ github.repository }}/commit/${{ github.sha }})
           format: markdown
           document: ${{ env.bin_path }}/*  
            
