@@ -104,7 +104,7 @@ jobs:
     steps:
       - name: MS_Teams Notify
         if: ${{ always() }}
-        uses: toko-bifrost/ms-teams-deploy-car@master
+        uses: toko-bifrost/ms-teams-deploy-card@master
         with:
           github-token: ${{ github.token}}
           webhook-url: ${{ secrets.MS_TEAMS_WEBHOOK_URL}}
