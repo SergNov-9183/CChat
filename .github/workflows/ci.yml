@@ -96,7 +96,7 @@ jobs:
       - name: Get build status
         uses: actions/download-artifact@v3
         with:
-          name: build_status
+          name: build_status.txt
           
     
       - name: Set jobs Statuses as output parametres
