@@ -64,7 +64,10 @@ jobs:
         uses: actions/upload-artifact@v3
         with: 
           name: Chat-artifacts
-          path: ${{ env.bin_path }}
+          path: |
+            ${{ env.bin_path }}
+            ./server
+            ./client
           retention-days: 5 
           
       - name: Creating status file
@@ -142,7 +145,7 @@ jobs:
               Each job status:
               Job build_matrix: *${{ steps.set_outputs.outputs.build_status }}*
               Job Notify Telegram: *${{ job.status }}*
-              For more information: [*Link to current commit*](https://github.com/${{ github.repository }}/commit/${{ github.sha }})
+              For more information: [Link to current commit](https://github.com/${{ github.repository }}/commit/${{ github.sha }})
           format: markdown
           document: ./bin/*
            
