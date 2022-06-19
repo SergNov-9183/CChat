@@ -116,7 +116,6 @@ jobs:
       - name: Get build status
         uses: actions/download-artifact@v3
         with:
-          # name: build_status.txt
           name: Chat-artifacts
 
       - name: pwd
@@ -152,49 +151,49 @@ jobs:
               Job Notify Telegram: *${{ job.status }}*
               For more information: [Link to current commit](https://github.com/${{ github.repository }}/commit/${{ github.sha }})
           format: markdown
-          document: ./bin/*
+          document: ${{ env.bin_path }}*
            
 
 
-#   notify_ms_teams:
-#     strategy: 
-#       matrix:
-#         os: [ubuntu-20.04]
-#     needs: [ build_matrix, Notify_telegram ]
-#     runs-on: ${{ matrix.os }}
+  notify_ms_teams:
+    strategy: 
+      matrix:
+        os: [ubuntu-20.04]
+    needs: [ build_matrix ]
+    runs-on: ${{ matrix.os }}
     
     
-#     env:
-#       app_name: app_${{ matrix.os }}_${{ github.run_number }}
-#       bin_path: ./bin
-#       absolute_bin_path: ${GITHUB_WORKSPACE}/bin
+    env:
+      app_name: app_${{ matrix.os }}_${{ github.run_number }}
+      bin_path: ./bin
+      absolute_bin_path: ${GITHUB_WORKSPACE}/bin
       
-#     steps:
-#       - uses: actions/checkout@v3
+    steps:
+      - uses: actions/checkout@v3
 
-#       - name: pwd
-#         run: pwd
+      - name: pwd
+        run: pwd
         
-#       - name: print bin
-#         run: ls
+      - name: print bin
+        run: ls
         
-#       - name: 'Download Artifact'
-#         uses: actions/download-artifact@v3
-#         with: 
-#           name: Chat-artifacts
-#           path: ${{ env.bin_path }}
-#           #retention-days: 5 
+      - name: 'Download Artifact'
+        uses: actions/download-artifact@v3
+        with: 
+          name: Chat-artifacts
+          path: ${{ env.bin_path }}
+          #retention-days: 5 
 
-#       - name: pwd
-#         run: pwd
+      - name: pwd
+        run: pwd
         
-#       - name: print bin
-#         run: ls
+      - name: print bin
+        run: ls
   
-#       - name: MS_Teams Notify
-#         if: ${{ always() }}
-#         uses: toko-bifrost/ms-teams-deploy-card@master 
-#         with:
-#           github-token: ${{ github.token}}
-#           webhook-uri: ${{ secrets.MS_TEAMS_WEBHOOK_URL }}
+      - name: MS_Teams Notify
+        if: ${{ always() }}
+        uses: toko-bifrost/ms-teams-deploy-card@master 
+        with:
+          github-token: ${{ github.token}}
+          webhook-uri: ${{ secrets.MS_TEAMS_WEBHOOK_URL }}
              
