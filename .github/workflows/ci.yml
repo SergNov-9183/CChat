@@ -115,7 +115,6 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: build_status.txt
-          path: ./build_status.txt
           
     
       - name: Set jobs Statuses as output parametres
