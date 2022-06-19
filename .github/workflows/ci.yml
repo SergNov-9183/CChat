@@ -61,11 +61,11 @@ jobs:
           retention-days: 5 
           
         
-  Notify_Telegram:
+  Notify_telegram:
     strategy: 
       matrix:
         os: [ubuntu-20.04]
-    needs: [ build_matrix, Notify_MS_Teams ]
+    needs: [ build_matrix, notify_ms_teams ]
     runs-on: ${{ matrix.os }}
     
     
@@ -87,14 +87,14 @@ jobs:
               Overall job status: *${{ job.status }}*
               Each job status:
               Job build_matrix: ${{ steps.set_outputs.outputs.build_matrix_status }}
-              Job Notify Telegram: ${{ steps.set_outputs.outputs.Notify_Telegram_status }}
-              Job Notify MS Teams: ${{ steps.set_outputs.outputs.Notify_MS_Teams_status }}
+              Job Notify Telegram: ${{ steps.set_outputs.outputs.notify_telegram_status }}
+              Job Notify MS Teams: ${{ steps.set_outputs.outputs.notify_ms_teams_status }}
               For more information: *https://github.com/${{ github.repository }}/commit/${{ github.sha }}*
           format: markdown
           document: ${{ env.bin_path }}/*          
 
 
-  Notify_MS_Teams:
+  notify_ms_teams:
     strategy: 
       matrix:
         os: [ubuntu-20.04]
