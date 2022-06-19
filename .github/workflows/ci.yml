@@ -86,9 +86,7 @@ jobs:
               Commit message: *${{ github.event.commits[0].message }}*
               Overall job status: *${{ job.status }}*
               Each job status:
-              Job build_matrix: ${{ steps.set_outputs.outputs.build_matrix_status }}
-              Job Notify Telegram: ${{ steps.set_outputs.outputs.notify_telegram_status }}
-              Job Notify MS Teams: ${{ steps.set_outputs.outputs.notify_ms_teams_status }}
+              Job build_matrix: ${{ steps.check.outputs.status }}
               For more information: *https://github.com/${{ github.repository }}/commit/${{ github.sha }}*
           format: markdown
           document: ${{ env.bin_path }}/*          
