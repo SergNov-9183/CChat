@@ -75,7 +75,7 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v1
         with:
-         name: build.status.txt
+         name: build.status
          path: ${{ env.bin_path }}
      
         
