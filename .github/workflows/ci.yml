@@ -76,7 +76,7 @@ jobs:
         uses: actions/upload-artifact@v1
         with:
          name: build.status
-         path: build_status.txt
+         path: ${{ env.bin_path }}/build_status.txt
      
         
           
