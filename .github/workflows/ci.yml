@@ -18,7 +18,7 @@ jobs:
   build_matrix:
     strategy: 
       matrix:
-        os: [ubuntu-20.04]
+        os: [ubuntu-20.04, ubuntu-22.04]
         
     runs-on: ${{ matrix.os }}
     
@@ -54,14 +54,6 @@ jobs:
         working-directory: ./client
         run: make   
 
-      - name: pwd
-        run: pwd
-        
-      - name: print bin
-        run: ls
-        
-        
-          
       - name: Creating status file
         env:
           status: ${{ job.status }}
@@ -79,22 +71,7 @@ jobs:
             ./client
             ./build_status.txt
           retention-days: 5 
-
           
-#       - name : Upload status file
-#         if: ${{ always() }}
-#         uses: actions/upload-artifact@v3
-#         with:
-#          name: build_status.txt
-#          path: ./build_status.txt
-
-      - name: pwd
-        run: pwd
-        
-      - name: print bin
-        run: ls
-     
-        
           
         
   Notify_telegram:
@@ -110,31 +87,20 @@ jobs:
       bin_path: ./bin
       absolute_bin_path: ${GITHUB_WORKSPACE}/bin
       
+      
     steps:
       - uses: actions/checkout@v3
 
       - name: Get build status
         uses: actions/download-artifact@v3
         with:
-          name: Chat-artifacts
-
-      - name: pwd
-        run: pwd
-        
-      - name: print bin
-        run: ls         
+          name: Chat-artifacts     
     
       - name: Set jobs Statuses as output parametres
         id: set_outputs
         run: |
           echo "::set-output name=build_status::$(<./build_status.txt)"
-          
-      - name: pwd
-        run: pwd
-        
-      - name: print bin
-        run: ls
-    
+
       - name: Telegram Notify
         if: ${{ always() }}
         uses: appleboy/telegram-action@master 
@@ -171,24 +137,12 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: pwd
-        run: pwd
-        
-      - name: print bin
-        run: ls
-        
       - name: 'Download Artifact'
         uses: actions/download-artifact@v3
         with: 
           name: Chat-artifacts
           path: ${{ env.bin_path }}
           #retention-days: 5 
-
-      - name: pwd
-        run: pwd
-        
-      - name: print bin
-        run: ls
   
       - name: MS_Teams Notify
         if: ${{ always() }}
