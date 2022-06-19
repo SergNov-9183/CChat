@@ -2,6 +2,7 @@
 
 name: CI
 
+
 # Controls when the workflow will run
 on:
   # Triggers the workflow on push or pull request events but only for the "main" branch
@@ -9,9 +10,9 @@ on:
     branches: [ "main", "actions", "SergNov-ghaTests" ]
   pull_request:
     branches: [ "main", "development" ]
-
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
+
 
 jobs:
   build_matrix:
@@ -51,14 +52,26 @@ jobs:
         run: qmake -makefile "DESTDIR= ${{ env.absolute_bin_path }}"
       - name: Run make
         working-directory: ./client
-        run: make     
+        run: make   
+
+      - name: Creating status file
+        env:
+          status: ${{ job.status }}
+        if: ${{ always() }}
+        run: |
+          echo ${{ job.status }} > ./build_status.txt
         
       - name: 'Upload Artifact'
         uses: actions/upload-artifact@v3
         with: 
           name: Chat-artifacts
-          path: ${{ env.bin_path }}
+          path: |
+            ${{ env.bin_path }}
+            ./server
+            ./client
+            ./build_status.txt
           retention-days: 5 
+          
           
         
   Notify_telegram:
@@ -74,29 +87,46 @@ jobs:
       bin_path: ./bin
       absolute_bin_path: ${GITHUB_WORKSPACE}/bin
       
+      
     steps:
+      - uses: actions/checkout@v3
+
+      - name: Get build status
+        uses: actions/download-artifact@v3
+        with:
+          name: Chat-artifacts     
+    
+      - name: Set jobs Statuses as output parametres
+        id: set_outputs
+        run: |
+          echo "::set-output name=build_status::$(<./build_status.txt)"
+
       - name: Telegram Notify
         if: ${{ always() }}
         uses: appleboy/telegram-action@master 
+        env:
+         status: ${{ job.status }}
         with:
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
           token: ${{ secrets.TELEGRAM_TOKEN }}
           message: |
               An event (*${{ github.event_name }}*) occured in [${{ github.repository }}](https://github.com/SergNov-9183/CChat) repository by *${{ github.actor }}*
               Commit message: *${{ github.event.commits[0].message }}*
-              Overall job status: *${{ job.status }}*
               Each job status:
-              Job build_matrix: ${{ steps.set_outputs.outputs.build_matrix_status }}
-              For more information: *https://github.com/${{ github.repository }}/commit/${{ github.sha }}*
+              - Job build_matrix: *${{ steps.set_outputs.outputs.build_status }}*
+              - Job Notify Telegram: *${{ job.status }}*
+              For more information: [Link to current commit](https://github.com/${{ github.repository }}/commit/${{ github.sha }})
+
           format: markdown
-          document: ${{ env.bin_path }}/*          
+          document: ${{ env.bin_path }}/*
+           
 
 
   notify_ms_teams:
     strategy: 
       matrix:
         os: [ubuntu-20.04]
-    needs: build_matrix
+    needs: [ build_matrix ]
     runs-on: ${{ matrix.os }}
     
     
@@ -106,18 +136,18 @@ jobs:
       absolute_bin_path: ${GITHUB_WORKSPACE}/bin
       
     steps:
-    
+      - uses: actions/checkout@v3
+
       - name: 'Download Artifact'
         uses: actions/download-artifact@v3
         with: 
           name: Chat-artifacts
           path: ${{ env.bin_path }}
-          retention-days: 5 
-          
-          
+          #retention-days: 5 
+  
       - name: MS_Teams Notify
         if: ${{ always() }}
-        uses: toko-bifrost/ms-teams-deploy-card@master
+        uses: toko-bifrost/ms-teams-deploy-card@master 
         with:
           github-token: ${{ github.token}}
           webhook-uri: ${{ secrets.MS_TEAMS_WEBHOOK_URL }}
