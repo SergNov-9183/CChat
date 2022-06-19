@@ -52,7 +52,13 @@ jobs:
         run: qmake -makefile "DESTDIR= ${{ env.absolute_bin_path }}"
       - name: Run make
         working-directory: ./client
-        run: make     
+        run: make   
+
+      - name: pwd
+        run: pwd
+        
+      - name: print bin
+        run: ls
         
       - name: 'Upload Artifact'
         uses: actions/upload-artifact@v3
@@ -74,6 +80,12 @@ jobs:
         with:
          name: build_status.txt
          path: ./build_status.txt
+
+      - name: pwd
+        run: pwd
+        
+      - name: print bin
+        run: ls
      
         
           
@@ -92,6 +104,11 @@ jobs:
       absolute_bin_path: ${GITHUB_WORKSPACE}/bin
       
     steps:
+      - name: pwd
+        run: pwd
+        
+      - name: print bin
+        run: ls
     
       - name: Get build status
         uses: actions/download-artifact@v3
@@ -144,15 +161,26 @@ jobs:
       absolute_bin_path: ${GITHUB_WORKSPACE}/bin
       
     steps:
-    
+
+      - name: pwd
+        run: pwd
+        
+      - name: print bin
+        run: ls
+        
       - name: 'Download Artifact'
         uses: actions/download-artifact@v3
         with: 
           name: Chat-artifacts
           path: ${{ env.bin_path }}
           #retention-days: 5 
-          
-          
+
+      - name: pwd
+        run: pwd
+        
+      - name: print bin
+        run: ls
+  
       - name: MS_Teams Notify
         if: ${{ always() }}
         uses: toko-bifrost/ms-teams-deploy-card@master 
