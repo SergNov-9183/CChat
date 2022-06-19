@@ -66,7 +66,7 @@ jobs:
           status: ${{ job.status }}
         if: ${{ always() }}
         run: |
-          echo ${{ job.status }} > build_status.txt
+          echo ${{ job.status }} > ./build_status.txt
           
       - name : Upload status file
         if: ${{ always() }}
