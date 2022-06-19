@@ -117,11 +117,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           # name: build_status.txt
-          name: | 
-            bin
-            server
-            client
-            build_status.txt
+          name: Chat-artifacts
 
       - name: pwd
         run: pwd
