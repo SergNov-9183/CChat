@@ -115,10 +115,10 @@ jobs:
           message: |
               An event (*${{ github.event_name }}*) occured in [${{ github.repository }}](https://github.com/SergNov-9183/CChat) repository by *${{ github.actor }}*
               Commit message: *${{ github.event.commits[0].message }}*
-               Each job status:
-              Job build_matrix: ${{ steps.set_outputs.outputs.build_status }}
-              Job Notify Telegram: ${{ job.status }}
-              For more information: *https://github.com/${{ github.repository }}/commit/${{ github.sha }}*
+              Each job status:
+              Job build_matrix: *${{ steps.set_outputs.outputs.build_status }}*
+              Job Notify Telegram: *${{ job.status }}*
+              For more information: [*Link to current commit*] (https://github.com/${{ github.repository }}/commit/${{ github.sha }})
           format: markdown
           document: ${{ env.bin_path }}/*  
            
