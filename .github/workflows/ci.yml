@@ -102,11 +102,19 @@ jobs:
       absolute_bin_path: ${GITHUB_WORKSPACE}/bin
       
     steps:
+    
+      - name: 'Download Artifact'
+        uses: actions/download-artifact@v3
+        with: 
+          name: Chat-artifacts
+          path: ${{ env.bin_path }}
+          retention-days: 5 
+          
       - name: MS_Teams Notify
         if: ${{ always() }}
         uses: toko-bifrost/ms-teams-deploy-card@master
         with:
           github-token: ${{ github.token}}
           webhook-url: ${{ secrets.MS_TEAMS_WEBHOOK_URL}}
-          document: ${{ env.bin_path }}/*
+          
 
