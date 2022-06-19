@@ -73,12 +73,13 @@ jobs:
       app_name: app_${{ matrix.os }}_${{ github.run_number }}
       bin_path: ./bin
       absolute_bin_path: ${GITHUB_WORKSPACE}/bin
-      status: ${{ job.status }}
       
     steps:
       - name: Telegram Notify
         if: ${{ always() }}
         uses: appleboy/telegram-action@master 
+        env:
+         status: ${{ job.status }}
         with:
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
           token: ${{ secrets.TELEGRAM_TOKEN }}
@@ -89,7 +90,8 @@ jobs:
               ${{ github.workflow }}: *${{ job.status }}*
               For more information: *https://github.com/${{ github.repository }}/commit/${{ github.sha }}*
           format: markdown
-          document: ${{ env.bin_path }}/*          
+          document: ${{ env.bin_path }}/*  
+           
 
 
   notify_ms_teams:
