@@ -1,0 +1,10 @@
+FROM ubuntu:20.04
+WORKDIR /client
+COPY . .
+RUN apt-get update 
+ENV DEBIAN_FRONTEND noninteractive
+RUN apt-get -y install qt5-default -qq
+RUN apt install g++ -y
+RUN apt install make -y
+RUN qmake "DESTDIR= /bin" "OBJECTS_DIR= ./"
+RUN make
