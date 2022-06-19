@@ -83,7 +83,7 @@ jobs:
           token: ${{ secrets.TELEGRAM_TOKEN }}
           message: |
               An event (*${{ github.event_name }}*) occured in [${{ github.repository }}](https://github.com/SergNov-9183/CChat) repository
-              Job: *${{ event.name }}*
+              Job: *${{ github.event.name }}*
               Job status: *${{ job.status }}*
           format: markdown
           document: ${{ env.bin_path }}/*          
