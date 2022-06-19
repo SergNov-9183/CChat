@@ -58,14 +58,26 @@ jobs:
         run: make     
         
       - name: 'Upload Artifact'
-        
-        env:
-         status: ${{ job.status }}
         uses: actions/upload-artifact@v3
         with: 
           name: Chat-artifacts
           path: ${{ env.bin_path }}
           retention-days: 5 
+          
+      - name: Creating status file
+        env:
+          status: ${{ job.status }}
+        if: ${{ always() }}
+        run: |
+          echo ${{ job.status }} > build_status.txt
+          
+      - name : Upload status file
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v1
+        with:
+         name: build.status
+         path: build_status.txt
+     
         
           
         
@@ -89,16 +101,11 @@ jobs:
         with:
           name: build_status
           
-      - name: Get Telegram notify status
-        uses: actions/download-artifact@v1
-        with:
-          name: telegram_notify_status
     
       - name: Set jobs Statusas as output parametres
         id: set_outputs
         run: |
           echo "::set-output name=build_status::$(<build_status/build_status.txt)"
-          echo "::set-output name=telegram_notify_status::$(<telegram_notify_status/telegram_notify_status.txt)"
     
       - name: Telegram Notify
         if: ${{ always() }}
@@ -114,7 +121,7 @@ jobs:
               Overall job status: *${{ job.status }}*
                Each job status:
               Job build_matrix: ${{ steps.set_outputs.outputs.build_status }}
-              Job Notify Telegram: ${{ steps.set_outputs.outputs.telegram_notify_status }}
+              Job Notify Telegram: ${{ job.status }}
               For more information: *https://github.com/${{ github.repository }}/commit/${{ github.sha }}*
           format: markdown
           document: ${{ env.bin_path }}/*  
