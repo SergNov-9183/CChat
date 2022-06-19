@@ -86,3 +86,26 @@ jobs:
               Job status: *${{ job.status }}*
           format: markdown
           document: ${{ env.bin_path }}/*          
+
+
+  Notify_MS_Teams:
+    strategy: 
+      matrix:
+        os: [ubuntu-20.04]
+    needs: build_matrix
+    runs-on: ${{ matrix.os }}
+    
+    
+    env:
+      app_name: app_${{ matrix.os }}_${{ github.run_number }}
+      bin_path: ./bin
+      absolute_bin_path: ${GITHUB_WORKSPACE}/bin
+      
+    steps:
+      - name: MS_Teams Notify
+        if: ${{ always() }}
+        uses: toko-bifrost/ms-teams-deploy-car@master
+        with:
+          github-token: ${{ github.token}}
+          webhook-url: ${{ secrets.MS_TEAMS_WEBHOOK_URL}}
+
