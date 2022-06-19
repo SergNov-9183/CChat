@@ -118,10 +118,10 @@ jobs:
         with:
           # name: build_status.txt
           name: | 
-            Chat-artifacts/bin
-            Chat-artifacts/server
-            Chat-artifacts/client
-            Chat-artifacts/build_status.txt
+            bin
+            server
+            client
+            build_status.txt
 
       - name: pwd
         run: pwd
