@@ -104,6 +104,9 @@ jobs:
         run: |
           echo "::set-output name=build_status::$(<./build_status.txt)"
           
+      - name: pwd
+        run: pwd
+        
       - name: print bin
         run: ls
     
