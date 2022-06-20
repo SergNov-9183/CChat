@@ -89,7 +89,6 @@ jobs:
       
       
     steps:
-      - uses: actions/checkout@v3
 
       - name: Get build status
         uses: actions/download-artifact@v3
