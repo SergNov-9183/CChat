@@ -42,7 +42,7 @@ jobs:
 
       - name: Run qmake build
         working-directory: ./server
-        run: qmake -makefile "DESTDIR= ${{ env.absolute_bin_path }}"         # ${{ env.bin_path }}/server/bin"
+        run: qmake -makefile "DESTDIR= ${{ env.absolute_bin_path }}"
       - name: Run make
         working-directory: ./server
         run: make     
@@ -142,8 +142,8 @@ jobs:
         uses: actions/download-artifact@v3
         with: 
           name: Chat-artifacts
-          path: ${{ env.bin_path }}
-          #retention-days: 5 
+          # path: ${{ env.bin_path }}
+          # retention-days: 5 
   
       - name: MS_Teams Notify
         if: ${{ always() }}
@@ -151,4 +151,4 @@ jobs:
         with:
           github-token: ${{ github.token}}
           webhook-uri: ${{ secrets.MS_TEAMS_WEBHOOK_URL }}
-             
+          document: ${{ env.bin_path }}/*
